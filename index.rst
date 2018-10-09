@@ -12,7 +12,9 @@ Freifunk Südholsteins Dokumentation
 
 
    self
+   infrastruktur
    gateway
+   meshviewer
 
 
 Indices and tables
