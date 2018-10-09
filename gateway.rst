@@ -27,7 +27,7 @@ Batman Advanced benötigt ein Kernel Modul und batclt.
 Batman Kernel Modul und batctl
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Als root user sudo su:
+Als root user :code:`sudo su`:
 
 ::
 
@@ -45,7 +45,7 @@ installiert) dann vorher entfernen.
     modprobe -rf batman_adv
 
 Damit Batman bei einem Kernel Update nicht verschindet oder durch die
-alte OS-Version ersetzt wird, richten wir das Modul mit dkms ein.
+alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
 
 ::
 
@@ -55,7 +55,7 @@ alte OS-Version ersetzt wird, richten wir das Modul mit dkms ein.
     cd batman-adv-2018.3/
     nano dkms.conf
 
-Die dkms.conf befüllen:
+Die :code:`dkms.conf` befüllen:
 
 ::
 
@@ -121,10 +121,10 @@ später zusammenfinden können:
 
 
 Es ist eine Konfigurationsdatei für fastd notwendig. In der folgenden
-Konfiguration bitte die [EXTERNE-IPv4] durch die echte IP vom Server
+Konfiguration bitte die :code:`[EXTERNE-IPv4]` durch die echte IP vom Server
 ersetzen. Wenn es auch eine IPv6 gibt, kann die entsprechende Zeile
-aktiviert werden und benötigt die echte IPv6 [EXTERNE-IPv6]. Die
-Konfigurationsdatei /etc/fastd/ffsh/fastd.conf soll bitte diese Zeilen
+aktiviert werden und benötigt die echte IPv6 :code:`[EXTERNE-IPv6]`. Die
+Konfigurationsdatei :code:`/etc/fastd/ffsh/fastd.conf` soll bitte diese Zeilen
 enthalten:
 
 ::
@@ -172,7 +172,7 @@ enthalten:
     ip link set dev $INTERFACE address 00:5b:27:80:0X:XX           # X für das GW Netz, zB 2:24 für 10.144.224.0/20
     ip link set dev $INTERFACE up
     ifup bat0
-    sh /etc/fastd/ffod/iptables_ffod.sh
+    sh /etc/fastd/ffsh/iptables_ffsh.sh
    ";
 
 
@@ -180,7 +180,7 @@ Das Beste ist, wenn man nun die fastd-Konfiguration mal überprüft.
 Vorher muss der Server rebootet werden, damit die vorher durchgeführten
 Anpassungen auch Wirkung zeigen :-)
 
-Dann als root auf der Konsole mit folgender Zeile die fastd
+Dann als :code:`root` auf der Konsole mit folgender Zeile die fastd
 Einstellungen prüfen:
 
 ::
@@ -199,10 +199,10 @@ als root mit:
 Wichtig: In der Konfiguration wird jeder Router reingelassen. Das mag
 nicht jeder, aber es vereinfacht die Integration der Router und damit
 auch die Verteilung. Wenn man das nicht möchte, müsste jeder Router
-separat mit seinem öffentlichen Schlüssel unter .../peers/ hinterlegt
+separat mit seinem öffentlichen Schlüssel unter :code:`.../peers/` hinterlegt
 werden. Auskommentiert ist eine Zeile bei on verify die eine Blacklist
 führt. Damit kann man unliebsame Genossen aussperren. Wenn man das haben
-möchte, so ist eine Datei /etc/fastd/fastd-blacklist.sh zu erstellen mit
+möchte, so ist eine Datei :code:`/etc/fastd/fastd-blacklist.sh` zu erstellen mit
 folgenden Zeilen und dann auch ausführbar zu machen:
 
 ::
@@ -225,7 +225,7 @@ Netzwerk Konfiguration
 IP Forwarding
 ^^^^^^^^^^^^^
 
-In der Konfigurationsdatei /etc/sysctl.d/forwarding.conf bitte die
+In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf` bitte die
 folgenden Zeilen eintragen, damit das IP Forwarding für IPv4 und IPv6
 laufen:
 
@@ -249,11 +249,11 @@ Als erstes kommt die Netzwerkbrücke (Schnittstelle zwischen dem "Mesh"
 Netzwerk und dem Internet-Ausgang per VPN:
 
 Hinweis: diese Konfiguration ist allgemeingültig für unser Netz. Daher
-ist das jeweilige Gateway in den IP-Adressen mit [GW Nr] geschrieben.
+ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
 Diese Nummer muss natürlich durchgänig gleich sein, da sonst nichts
 funktionieren wird!
 
-Bitte die /etc/network/interfaces mit Folgenden Zeilen befüllen. Das
+Bitte die :code:`/etc/network/interfaces` mit Folgenden Zeilen befüllen. Das
 eth0 sollte so belassen werden, wie es bereits eingerichtet war, damit
 die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
 
@@ -278,20 +278,20 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
    # - Unter der hier konfigurierten IP ist der Server selber im Freifunk Netz erreichbar
    # - bridge_ports none sorgt dafuer, dass die Bruecke auch ohne Interface erstellt wird
 
-   auto br-ffod
-   iface br-ffod inet static
+   auto br-ffsh
+   iface br-ffsh inet static
        address 10.144.[GW Netz].1
        netmask 255.255.0.0
        bridge_ports none
 
-   iface br-ffod inet6 static
+   iface br-ffsh inet6 static
        address fddf:0bf7:80::[GW Netz]:1
        netmask 64
 
-       post-up /sbin/ip -6 addr add fddf:0bf7:80::[GW Netz]:1/64 dev br-ffod
-       post-up /sbin/ip rule add iif br-ffod table 42
-       pre-down /sbin/ip -6 addr del fddf:0bf7:80::[GW Netz]:1/64 dev br-ffod
-       pre-down /sbin/ip rule del iif br-ffod table 42
+       post-up /sbin/ip -6 addr add fddf:0bf7:80::[GW Netz]:1/64 dev br-ffsh
+       post-up /sbin/ip rule add iif br-ffsh table 42
+       pre-down /sbin/ip -6 addr del fddf:0bf7:80::[GW Netz]:1/64 dev br-ffsh
+       pre-down /sbin/ip rule del iif br-ffsh table 42
 
    # Batman Interface
    # - Erstellt das virtuelle Inteface fuer das Batman-Modul und bindet dieses an die Netzwerkbruecke
@@ -304,35 +304,35 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
 
    allow-hotplug bat0
    iface bat0 inet6 manual
-       pre-up batctl if add ffod-mesh
+       pre-up batctl if add ffsh-mesh
        post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
        post-up ip link set dev bat0 up # Notwendig?
-       post-up brctl addif br-ffod bat0
+       post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
        post-up batctl gw server 100 Mbit/ 100 Mbit
 
        post-up ip rule add from all fwmark 0x1 table 42
 
-       pre-down brctl delif br-ffod bat0 || true
+       pre-down brctl delif br-ffsh bat0 || true
        down ip link set dev bat0 down
 
 
 
-Die /etc/hosts mit Folgenden Zeilen befüllen:
+Die :code:`/etc/hosts` mit Folgenden Zeilen befüllen:
 
 ::
 
 
    127.0.0.1                  localhost
-   [externe IP]               [GW Name].ffod.org   [GW Name]
-   10.144.[GW Netz].1         ffod
-   fddf:0bf7:80::[GW Netz]:1  ffod
+   [externe IP]               [GW Name].freifunk-suedholstein.de   [GW Name]
+   10.144.[GW Netz].1         ffsh
+   fddf:0bf7:80::[GW Netz]:1  ffsh
 
 
 IP Tables
 ^^^^^^^^^
 
-Lege die Konfigurationsdatei /etc/iptables.up.rules an mit Folgendem:
+Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
 
 Damit werden alle Pakete, die über die Bridge rein kommen, mit dem
 0x1-Flag markiert, und damit über Routing-Tabelle 42 geschickt. Es gibt
@@ -363,7 +363,7 @@ Tabelle 42 geschickt werden.
 
 
 Nun müssen die IP Tables geladen werden. Bitte erstellt die Datei
-/etc/network/if-pre-up.d/iptables mit folgenden Zeilen:
+:code:`/etc/network/if-pre-up.d/iptables` mit folgenden Zeilen:
 
 ::
 
@@ -372,7 +372,7 @@ Nun müssen die IP Tables geladen werden. Bitte erstellt die Datei
    /sbin/iptables-restore < /etc/iptables.up.rules
 
 
-Bitte nun noch eine Datei /etc/fastd/ffod/iptables\_ffod.sh erstellen,
+Bitte nun noch eine Datei :code:`/etc/fastd/ffsh/iptables\_ffsh.sh` erstellen,
 die alle Routing iptables Vorgaben enthält:
 
 ::
@@ -380,7 +380,7 @@ die alle Routing iptables Vorgaben enthält:
 
    #!/bin/sh
    /sbin/ip route add default via [EXTERNE-IPv4] table 42
-   /sbin/ip route add 10.144.0.0/16 dev br-ffod src 10.144.[GW Netz].1 table 42
+   /sbin/ip route add 10.144.0.0/16 dev br-ffsh src 10.144.[GW Netz].1 table 42
    /sbin/ip route add 0/1 dev tun0 table 42
    /sbin/ip route add 128/1 dev tun0 table 42
    /sbin/ip route del default via [EXTERNE-IPv4] table 42
@@ -400,7 +400,7 @@ Konsole eingeben:
 
 
    chmod +x /etc/network/if-pre-up.d/iptables
-   chmod +x /etc/fastd/ffod/iptables_ffod.sh
+   chmod +x /etc/fastd/ffsh/iptables_ffsh.sh
 
    iptables-restore < /etc/iptables.up.rules
 
@@ -411,7 +411,7 @@ VPN
 Achtung: Kopiere bitte nicht die Konfigurationsdateien von einem Gateway
 auf andere Gateways!
 
-Für das VPN werden diese Dateien benötigt, die alle nach /etc/openvpn/
+Für das VPN werden diese Dateien benötigt, die alle nach :code:`/etc/openvpn/`
 müssen:
 
 ::
@@ -423,7 +423,7 @@ müssen:
    mullvad_linux.conf
 
 
-Die Datei mullvad\_linux.conf muss noch um folgende Zeilen am Ende
+Die Datei :code:`mullvad\_linux.conf` muss noch um folgende Zeilen am Ende
 ergänzt werden:
 
 ::
@@ -432,17 +432,17 @@ ergänzt werden:
    #custom
    route-noexec
    up /etc/openvpn/mullvad_up.sh
-   up /etc/fastd/ffod/iptables_ffod.sh
+   up /etc/fastd/ffsh/iptables_ffsh.sh
 
 
 Mullvad hat an seinen Konfigurationen seit mehreren Sicherheitslücken
 bei OpenVPN und Snowden/NSA geändert. Es kann sein, dass ein Fehler zur
-Cipher-Liste angezeigt wird. Dann muss in der mullvad\_linux.conf die
+Cipher-Liste angezeigt wird. Dann muss in der :code:`mullvad\_linux.conf` die
 Zeile zur TLS-Verschlüsselung beginnend tls-cipher auskommentiert
 werden. Wenn kein IPv6 am Server ins Internet möglich ist, kann auch
 tun-ipv6 auskommentiert werden.
 
-Die Datei /etc/openvpn/mullvad\_up.sh gibt es noch nicht.Also bitte die
+Die Datei :code:`/etc/openvpn/mullvad\_up.sh` gibt es noch nicht.Also bitte die
 Datei mit folgenden Zeilen anlegen:
 
 ::
@@ -455,14 +455,14 @@ Datei mit folgenden Zeilen anlegen:
    exit 0
 
 
-Diese Datei muss nun auch als root ausführbar gemacht werden:
+Diese Datei muss nun auch als :code:`root` ausführbar gemacht werden:
 
 ::
 
     chmod +x /etc/openvpn/mullvad\_up.sh
 
 Damit Linux auch diese VPN-Schnittstelle kennt, muss tun in der Datei
-/etc/modules bekannt gemacht werden. OpenVPN benötigt ein tun-Interface.
+:code:`/etc/modules` bekannt gemacht werden. OpenVPN benötigt ein tun-Interface.
 Trage einfach in eine eigene neue Zeile dies ein
 
 ::
@@ -470,7 +470,7 @@ Trage einfach in eine eigene neue Zeile dies ein
    tun
 
 
-Bitte nun als root über die Konsole tun aktivieren und den VPN starten
+Bitte nun als :code:`root` über die Konsole tun aktivieren und den VPN starten
 mit:
 
 ::
@@ -486,7 +486,7 @@ Es ist sinnvoll regelmäßig zu prüfen, ob die VPN Verbindung noch aktiv
 ist. Dazu wird ein Script auf dem Server abgelegt, dass dann über den
 CRON immer neu den VPN-Connect prüft.
 
-Script /ffod/check-vpn.sh
+:code:`/ffsh/check-vpn.sh`
 
 ::
 
@@ -508,16 +508,16 @@ Dann noch das Script ausführbar machen:
 
 ::
 
-   chmod ug+x /ffod/check-vpn.sh
+   chmod ug+x /ffsh/check-vpn.sh
 
 
-Danach in die Datei /etc/crontab das Skript alle 10 Minute auszuführen
+Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
 und damit regelmäßig der VPN-Status geprüft wird.
 
 ::
 
    # Check VPN via openvpn is running, if not service restart
-   */10 * * * * root /ffod/check-vpn.sh > /dev/null
+   */10 * * * * root /ffsh/check-vpn.sh > /dev/null
 
 Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
 
@@ -537,7 +537,7 @@ DHCP
 DHCP radvd IPv6
 ^^^^^^^^^^^^^^^
 
-Es wird für IPv6 die Konfigurationsdatei /etc/radvd.conf mit folgenden
+Es wird für IPv6 die Konfigurationsdatei :code:`/etc/radvd.conf` mit folgenden
 Zeilen benötigt:
 
 ::
@@ -560,7 +560,7 @@ Zeilen benötigt:
    };
 
 
-Jetzt kann radvd als root auf der Konsole gestartet werden:
+Jetzt kann radvd als :code:`root` auf der Konsole gestartet werden:
 
 ::
 
@@ -570,13 +570,13 @@ Jetzt kann radvd als root auf der Konsole gestartet werden:
 DHCP isc-dhcp-server IPv4 und IPv6
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Die Konfigurationsdatei /etc/dhcp/dhcpd.conf wird für IPv4 mit folgenden
+Die Konfigurationsdatei :code:`/etc/dhcp/dhcpd.conf` wird für IPv4 mit folgenden
 Zeilen benötigt:
 
 ::
 
    ddns-update-style none;
-   option domain-name ".ffod";
+   option domain-name ".ffsh";
 
    # möglichst kurze Leasetime
    default-lease-time 120;
@@ -598,7 +598,7 @@ Zeilen benötigt:
    include "/etc/dhcp/static.conf";
 
 
-Bitte eine leere Datei /etc/dhcp/static.conf erzeugen.
+Bitte eine leere Datei :code:`/etc/dhcp/static.conf` erzeugen.
 
 ::
 
@@ -619,7 +619,7 @@ Bitte eine leere Datei /etc/dhcp/static.conf erzeugen.
     */5 * * * * root /home/dhcpstatic/dhcp-static/updateStatics.sh > /dev/null 2>&1
 
 Auf dem DHCP-Server muss noch das Bridge-Interface für IPv4 festgelegt
-werden. Bitte die Datei /etc/default/isc-dhcp-server mit folgender
+werden. Bitte die Datei :code:`/etc/default/isc-dhcp-server` mit folgender
 Option ergänzen:
 
 ::
@@ -655,7 +655,7 @@ DNS-Server (BIND)
 Für das interne Freifunknetz ist nun noch der DNS-Server bind9 mit den
 Konfigurationsdateien wie folgt zu konfigurieren:
 
-Erstmal diese Datei /etc/bind/named.conf.options
+Erstmal diese Datei :code:`/etc/bind/named.conf.options`
 
 ::
 
@@ -688,7 +688,7 @@ Erstmal diese Datei /etc/bind/named.conf.options
    };
 
 
-Dann in der Datei /etc/bind/named.conf.local folgendes am Ende ergänzen:
+Dann in der Datei :code:`/etc/bind/named.conf.local` folgendes am Ende ergänzen:
 
 ::
 
@@ -752,7 +752,7 @@ Und Klonen das Repository
 
 ::
 
-    git clone https://github.com/ffod/bind.git
+    git clone https://github.com/ffsh/bind.git
 
 Danach verlassen wir den Nutzer.
 
@@ -806,12 +806,13 @@ aber nicht.
 
 Und an das System anpassen:
 
+TODO
 ::
 
 
-   your-clientbridge-if - br-ffrz | br-ffod
-   your-mesh-vpn-if     - ffrz-mesh | ffod-mesh
-   your-batman-if       - ffrz-mesh | ffod-mesh # Damit die MAC oben aus der Tabelle benutzt wird
+   your-clientbridge-if - br-ffsh
+   your-mesh-vpn-if     - ffsh-mesh
+   your-batman-if       - ffsh-mesh
 
 
 ::
@@ -832,7 +833,7 @@ Und an das System anpassen:
 Dann mit hostname prüfen ob der erwünschte Gateway-Name eingetragen ist
 ggf. ändern oder:
 
-/opt/mesh-announce/nodeinfo.d/hostname
+:code:`/opt/mesh-announce/nodeinfo.d/hostname`
 
 ::
 

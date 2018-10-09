@@ -6,7 +6,7 @@ meshviewer
 ==========
 
 Die Folgenden Schritte dienen dazu, eine Karte anzuzeigen. Dies lässt
-sich auch auf einem vom Gateway getrennten System durchführen. ### Karte
+sich auch auf einem vom Gateway getrennten System durchführen.
 
 [[Datei:map-uebersicht.png]]
 
@@ -34,7 +34,7 @@ installieren wir eine neue Version von go.
    sudo su
 
 
-Als root in ~/.bashrc
+Als :code:`root` in :code:`~/.bashrc`
 
 ::
 
@@ -43,7 +43,7 @@ Als root in ~/.bashrc
    PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 
-Mit whereis go prüfen ob go gefunden wird:
+Mit :code:`whereis` go prüfen ob go gefunden wird:
 
 ::
 
@@ -59,7 +59,7 @@ Dann wird yanic installiert.
    go get -v -u github.com/FreifunkBremen/yanic
 
 
-Die Konfiguration von Yanic wird in /etc/yanic.conf angelegt. Eine
+Die Konfiguration von Yanic wird in :code:`/etc/yanic.conf` angelegt. Eine
 Beispiel gibt es
 `hier <https://raw.githubusercontent.com/ffsh/ffshConfigs/master/yanic.conf>`__:
 
@@ -82,7 +82,7 @@ Damit yanic auch als Deamon läuft legen wir noch einen service an.
 influxdb
 --------
 
-Influxdb dient als Datenbank für yanic
+Influxdb dient als Datenbank für :code:`yanic`
 
 ::
 
@@ -90,10 +90,10 @@ Influxdb dient als Datenbank für yanic
    sudo apt install influxdb influxdb-client
 
 
-Nun sichern wir die influxdb ab /etc/influxdb/influxdb.conf
+Nun sichern wir die influxdb ab :code:`/etc/influxdb/influxdb.conf`
 
 Hier werden nur die empfohlenen Anpassungen beschrieben: Noch vor der
-[meta] Sektion setzen wir, sonst wäre der port 8088 überall offen.
+:code:`[meta]` Sektion setzen wir, sonst wäre der port 8088 überall offen.
 
 ::
 
@@ -101,7 +101,7 @@ Hier werden nur die empfohlenen Anpassungen beschrieben: Noch vor der
    bind-address = "localhost:8088"
 
 
-Weiter unten bei [admin] das gleiche:
+Weiter unten bei :code:`[admin]` das gleiche:
 
 ::
 
@@ -109,7 +109,7 @@ Weiter unten bei [admin] das gleiche:
    bind-address = "localhost:8083"
 
 
-kurz danach in [http]
+kurz danach in :code:`[http]`
 
 ::
 
@@ -117,7 +117,9 @@ kurz danach in [http]
    bind-address = "localhost:8086"
 
 
-systemctl restart influxdb
+::
+
+   systemctl restart influxdb
 
 Nun sollte influxdb nur noch auf localhost erreichbar sein, prüfen kann
 man dies mit netstat -tlpn
@@ -177,7 +179,7 @@ meshviewer-rgb
 ~~~~~~~~~~~~~~
 
 Nun installieren wir den `meshviewer <https://doc.meshviewer.org/>`__
-selbst. Im web Verzeichnis /var/www/
+selbst. Im web Verzeichnis :code:`/var/www/`
 
 ::
 
@@ -187,7 +189,7 @@ selbst. Im web Verzeichnis /var/www/
    yarn
 
 
-Nun muss die Konfiguration in meshviewer/config.js eventuell noch
+Nun muss die Konfiguration in :code:`meshviewer/config.js` eventuell noch
 angepasst werden.
 
 Danach yarn run gulp Nun muss nur noch ein Webserver meshviewer/build
