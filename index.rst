@@ -10,6 +10,8 @@ Welcome to Freifunk Südholstein's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   gateway
+
 
 
 Indices and tables
