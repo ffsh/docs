@@ -1,5 +1,8 @@
+Gateway Konfiguration
+=====================
+
 Infrastruktur
-=============
+-------------
 
 Network IPv4: 10.144.0.0/16 Network IPv6: fddf:0bf7:80::/48
 
@@ -324,10 +327,10 @@ Network IPv4: 10.144.0.0/16 Network IPv6: fddf:0bf7:80::/48
    </table>
 
 Installation
-============
+------------
 
 Allgemeine Software Pakete
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Diese Anletugn ist auf Debian 9 ausgerichtet
 
