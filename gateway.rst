@@ -5,11 +5,9 @@
 Gateway Konfiguration
 =====================
 
-Installation
-------------
 
 Allgemeine Software Pakete
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Diese Anletugn ist auf Debian 9 ausgerichtet
 
@@ -19,13 +17,13 @@ Diese Anletugn ist auf Debian 9 ausgerichtet
 
 
 Batman und Fastd
-~~~~~~~~~~~~~~~~
+----------------
 
 Batman Advanced ist das in Südholstein verwendete Routing Verfahren.
 Batman Advanced benötigt ein Kernel Modul und batclt.
 
 Batman Kernel Modul und batctl
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Als root user :code:`sudo su`:
 
@@ -89,7 +87,7 @@ danach
 
 
 fastd
-^^^^^
+-----
 
 fastd v18 ist in Debian 9 bereits in den Repositorys enthalten. Unter
 Debian 8 findet man es in den jessie-backports.
@@ -220,10 +218,10 @@ Wie die weiteren Dateien mit der Blacklist aussehen, findet man unter
 diesem Link https://github.com/ffruhr/fastdbl
 
 Netzwerk Konfiguration
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 IP Forwarding
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf` bitte die
 folgenden Zeilen eintragen, damit das IP Forwarding für IPv4 und IPv6
@@ -239,7 +237,7 @@ laufen:
 
 
 Interfaces Konfigurieren
-^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Nun kommt das eigentlich wichtigste. Das Netzwerk muss eingerichtet
 werden, so das die einzelnen Schnittstelle bereitstehen und eine Art
@@ -330,7 +328,7 @@ Die :code:`/etc/hosts` mit Folgenden Zeilen befüllen:
 
 
 IP Tables
-^^^^^^^^^
+~~~~~~~~~
 
 Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
 
@@ -406,7 +404,7 @@ Konsole eingeben:
 
 
 VPN
-~~~
+---
 
 Achtung: Kopiere bitte nicht die Konfigurationsdateien von einem Gateway
 auf andere Gateways!
@@ -480,7 +478,7 @@ mit:
 
 
 VPN-Connect regelmäßig überprüfen
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Es ist sinnvoll regelmäßig zu prüfen, ob die VPN Verbindung noch aktiv
 ist. Dazu wird ein Script auf dem Server abgelegt, dass dann über den
@@ -527,7 +525,7 @@ Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
 
 
 DHCP
-~~~~
+----
 
 ::
 
@@ -535,7 +533,7 @@ DHCP
 
 
 DHCP radvd IPv6
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 Es wird für IPv6 die Konfigurationsdatei :code:`/etc/radvd.conf` mit folgenden
 Zeilen benötigt:
@@ -645,7 +643,7 @@ War das erfolgreich, so kann der DHCP-Server als root gestartet werden:
 
 
 DNS-Server (BIND)
-~~~~~~~~~~~~~~~~~
+-----------------
 
 ::
 
@@ -777,7 +775,7 @@ Zum Schluss starten wir bind neu.
 
 
 Mesh Announce (veraltet)
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 Um als Gateway, Server oder alles was kein Freifunk Router ist auf der
 Karte zu erscheinen kann
