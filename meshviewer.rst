@@ -8,7 +8,7 @@ meshviewer
 Die Folgenden Schritte dienen dazu, eine Karte anzuzeigen. Dies lässt
 sich auch auf einem vom Gateway getrennten System durchführen.
 
-[[Datei:map-uebersicht.png]]
+.. image:: images/meshviewer-concept.png
 
 yanic
 -----
@@ -59,9 +59,10 @@ Dann wird yanic installiert.
    go get -v -u github.com/FreifunkBremen/yanic
 
 
-Die Konfiguration von Yanic wird in :code:`/etc/yanic.conf` angelegt. Eine
-Beispiel gibt es
-`hier <https://raw.githubusercontent.com/ffsh/ffshConfigs/master/yanic.conf>`__:
+Die Konfiguration von Yanic wird in :code:`/etc/yanic.conf` angelegt:
+
+
+.. literalinclude:: configs/yanic.conf
 
 Wir können testen ob yanic funktioniert in dem wir eine manuelle Anfrage
 stellen hier an das Gateway Hopfenbach:
