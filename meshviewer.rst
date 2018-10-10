@@ -73,7 +73,7 @@ stellen hier an das Gateway Hopfenbach:
    yanic query --wait 5 bat0 "fddf:0bf7:80::128:1"
 
 
-Damit yanic auch als Deamon läuft legen wir noch einen service an.
+Damit yanic auch als Deamon läuft legen wir noch einen Service an.
 
 ::
 
@@ -195,3 +195,20 @@ angepasst werden.
 
 Danach yarn run gulp Nun muss nur noch ein Webserver meshviewer/build
 ausliefern.
+
+
+Tile-cache mit nginx
+---------------------
+
+Für den Meshviewer benötigt man einen Tile-Server, der die Karte als einzelne Kacheln ausliefert.
+Wir verwenden dabei das kostenlose und freie Angebot von OpenStreetMap. Damit die Server von OpenStreetMap weniger stark belastet werden verwenden wir einen Tile-Cache. Bei einer Anfrage für eine Karten-Kachel fragt der Browser den Cache, hat dieser die Datei bereits, so liefert er sie direkt aus. Hat er sie nicht, so fragt er bei den OpenStreetMap Servern und speichert die Datei in seinem Cache.
+Für die einfache Umsetzung haben ein paar Freifunker an einer Konfiguration für nginx gearbeitet, welche genau das umsetzt.
+
+Voraussetzungen:
+- nginx erreichbar unter der entsprechenden Domain
+- TLS mit gültigem Zertifikat (Let's Encrypt)
+- ein wenig Speicherplatz
+
+Die für uns angepasste Version ist so konfiguriert das sie sich hinter einem apache-Server befindet und deshalb keine TLS Konfiguration braucht, passe sie für deinen Anwendungsfall an.
+
+.. literalinclude:: configs/nginx--tilechache.conf
