@@ -211,4 +211,4 @@ Voraussetzungen:
 
 Die für uns angepasste Version ist so konfiguriert das sie sich hinter einem apache-Server befindet und deshalb keine TLS Konfiguration braucht, passe sie für deinen Anwendungsfall an.
 
-.. literalinclude:: configs/nginx--tilechache.conf
+.. literalinclude:: configs/nginx-tilecache.conf
