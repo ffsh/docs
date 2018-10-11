@@ -46,6 +46,22 @@ build.py
 jenkins
 -------
 
+Jenkins Projekt Bash Befehle
+
+::
+
+    export PYTHONUNBUFFERED=1
+    ./build.py -c update -b ${GIT_BRANCH} -n ${BUILD_NUMBER} -w ${WORKSPACE} --commit ${GIT_COMMIT} --log "V=w"
+
+    # Befehle die nur manchmal notwenig sind
+    #./build.py -c dirclean -b ${GIT_BRANCH} -n ${BUILD_NUMBER} -w ${WORKSPACE} --commit ${GIT_COMMIT}
+    #./build.py -c clean -b ${GIT_BRANCH} -n ${BUILD_NUMBER} -w ${WORKSPACE} --commit ${GIT_COMMIT}
+
+    ./build.py -c build -b ${GIT_BRANCH} -n ${BUILD_NUMBER} -w ${WORKSPACE} --commit ${GIT_COMMIT} --cores "9" --log "V=w"
+    ./build.py -c sign -b ${GIT_BRANCH} -n ${BUILD_NUMBER} -w ${WORKSPACE} --commit ${GIT_COMMIT} -s ${SECRET}
+    ./build.py -c publish -b ${GIT_BRANCH} -n ${BUILD_NUMBER} -w ${WORKSPACE} --commit ${GIT_COMMIT} -d "/var/www/firmware.grotax.de"
+
+
 Changelog
 ---------
 

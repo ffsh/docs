@@ -5,9 +5,16 @@
 Infrastruktur
 =============
 
+Netzwerk
+--------
+
 Network IPv4: :code:`10.144.0.0/16`
 
 Network IPv6: :code:`fddf:0bf7:80::/48`
+
+
+Gateways
+--------
 
 +------------+---------------------+------+--------------+-----------------------------+---------------+-------------------+--------------------------+----------------------------------+---------------+----------+-----------------------+---------+
 | Name       | ULA                 | IPv6 | RFC1918      | DHCP                        | ICVPN-Transit | Mesh MAC(s)       | B.A.T.M.A.N.-adv. MAC(s) | Dienste                          | Standort      | Betreuer | Exit/VPN-Dienst       | Status  |
@@ -36,3 +43,31 @@ Network IPv6: :code:`fddf:0bf7:80::/48`
 +------------+---------------------+------+--------------+-----------------------------+---------------+-------------------+--------------------------+----------------------------------+---------------+----------+-----------------------+---------+
 | Viehbach   | fddf:0bf7:80::224:1 | ULA  | 10.144.224.1 | 10.144.224.2-10.144.239.254 | n/a           | 00:5b:27:80:02:24 | 00:5b:27:81:02:24        |                                  | Hetzner(fsn)  | ks       | Mullvad 1 / direkt    | offline |
 +------------+---------------------+------+--------------+-----------------------------+---------------+-------------------+--------------------------+----------------------------------+---------------+----------+-----------------------+---------+
+
+Karte
+-----
+
+Die Karte kann unter https://map.freifunk-suedholstein.de erreicht werden. Die Karte wird auf dem Gateway Hopfenbach betrieben. Sie basiert auf dem `meshviewer <https://meshviewer.org/>`__ von Freifunk Regensburg. Unsere Konfiguration findet man in unserem fork auf `GitHub <https://github.com/ffsh/meshviewer>`__.
+
+Unsere Grafana instanz ist unter https://map.freifunk-suedholstein.de/grafana erreichbar.
+
+
+::
+
+
+    # meshviewer.json
+    https://map.freifunk-suedholstein.de/data/meshviewer.json
+    # nodes.json (v2)
+    https://map.freifunk-suedholstein.de/data/nodes.json
+    # nodelist.json
+    https://map.freifunk-suedholstein.de/data/nodelist.json
+
+Jenkins
+-------
+
+Unsere Firmware wird mit Jenkins gebaut die Jenkins Instanz ist unter https://jenkins.grotax.de erreichbar und wird von `Grotax <https://github.com/Grotax>`__ betrieben. Die Images werden automatisch unter https://firmware.grotax.de veröffentlicht. Eine offizielle Veröffentlichung auf den Firmware-Servern erfolgt erst nach manueller Prüfung und Signatur.
+
+GitHub
+------
+
+Fast alle Daten, welche für den Betrieb notwendig sind, werden unter https://github.com/ffsh gespeichert.
