@@ -43,6 +43,75 @@ Dieser extra Aufwand ist notwendig weil der autoupdater in Gluon sehr einfach au
 build.py
 --------
 
+Das :code:`build.py` Skript ist ein in Python geschriebenes Programm zum Bauen der Gluon Firmware. Es ist nicht Perfekt und könnte ein Reafctoring gebrauchen aber es erledigt seinen Job.
+Im folgenden werden zunächst zwei Tabellen gezeigt und dann anhand eines Beispiels das Bauen der Firmware präsentiert.
+
+Tabellen
+~~~~~~~~
+
+:code:`build.py` unterstützt verschiedene Befehle (commands):
+
++---------+----------+-------------------+-------------------------------------------------+
+| command | value    | make "equivalent" | Kommentar                                       |
++---------+----------+-------------------+-------------------------------------------------+
+| -c      | update   | make update       | lädt opwenwrt und wendet gluon patches an       |
++---------+----------+-------------------+-------------------------------------------------+
+| -c      | build    | make build        | baut die firmware                               |
++---------+----------+-------------------+-------------------------------------------------+
+| -c      | clean    | make clean        | löscht alle packages des targets                |
++---------+----------+-------------------+-------------------------------------------------+
+| -c      | dirclean | make dirclean     | löscht alle targets und die toolchain           |
++---------+----------+-------------------+-------------------------------------------------+
+| -c      | sign     | n/a               | signiert die firmware                           |
++---------+----------+-------------------+-------------------------------------------------+
+
+Außerdem gibt es eine Reihe von Argumenten.
+
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| command  | value                          | default     | name         | pflicht | Kommentar                                                                              |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| -b       | dev or testing or rc or stable | dev         | Branch       | ja      | der Firmware branch                                                                    |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| -w       | site                           | n/a         | Workspace    | ja      | Pfad zum site Repository                                                               |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| -n       | 42                             | n/a         | Build Number | ja      | build Nummer wird von jenkins automatisch hochgezählt wird im firmware Namen verwendet |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| -t       | ar71xx-generic or ...          | all targets | Target       | nein    | ohne Angabe werden alle Targets gebaut, mit Angabe nur der angegebene Target           |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| -s       | <pfad zu secret>               | n/a         | Secret       | nein    | wird nur beim signieren benötigt                                                       |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| -d       | <pfad zu public directory>     | n/a         | Directory    | nein    | wird nur bei -publish benötigt                                                         |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| --commit | der verwendete commit          | n/a         | Commit       | ja      | commit sha, dient als Referenz im build.json                                           |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| --cores  | 1 bis N                        | 1           | Cores        | nein    | Anzahl der zu verwenden Threads, Empfehlung: CPU-Kerne+1                               |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+| --log    | w or s                         | s           | Log          | nein    | Log level w: nur Warnungen/Fehler, s: alles                                            |
++----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
+
+Beispiel
+~~~~~~~~
+
+.. code-block:: bash
+    :linenos:
+
+    git clone --recurse https://github.com/ffsh/site.git
+    cd site
+    ./build.py -c update -b grotax -n 1 -w $(pwd) --commit $(git rev-parse HEAD)
+    ./build.py -c build -t "ar71xx-tiny" -b grotax -n 1 -w $(pwd) --commit $(git rev-parse HEAD)
+
+In Zeile 1 wird das Repository inklusive der "submodules" geklont. Danach in Zeile 2 wechseln wir in das "site" Verzeichnis.
+Dort führen wir zum ersten mal das :code:`build.py` Skript aus (Zeile 3).
+
+- :code:`-c update` (Wir wollen die Abhängigkeiten von Gluon aktualisieren)
+- :code:`-b grotax` (Hier kann ein beliebiger Name eingesetzt werden)
+- :code:`-n 1` (Es ist unser erster build)
+- :code:`-w $(pwd)` (Der Workspace in diesem Fall das Aktuelle Verzeichnis (pwd))
+- :code:`--commit $(git rev-parse HEAD)` (Der Commit-Hash wird hier ermittelt)
+
+In Zeile 4 besteht der unterschied dann nur in dem :code:`-c build` (wir wollen nun bauen) und dem :code:`-t "ar71xx-tiny"` (hier wird nur für ein target gebaut).
+
+
 jenkins
 -------
 
