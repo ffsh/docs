@@ -137,7 +137,7 @@ Changelog
 Dieses Changelog stellt einen groben überblick über die Änderungen in der Firmware dar.
 Die Versionierung entspricht der versionierung von Gluon. Dieses Changelog bezieht sich auf den :code:`stable` Zweig die anderen Zweige können davon abweichen.
 
-2018.1.1 ab build xxx
+2018.1.3 ab build 153
 ~~~~~~~~~~~~~~~~~~~~~
 - fix: fehlendes Paket für die vpn Konfigruation
 
@@ -145,7 +145,6 @@ Die Versionierung entspricht der versionierung von Gluon. Dieses Changelog bezie
 ~~~~~~~~~~~~~~~~~~~~~
 - release ohne viele Änderungen (bereits in >=134 enthalten)
 - fehlendes Paket für die vpn Konfigruation
-
 
 2018.1 ab build 134
 ~~~~~~~~~~~~~~~~~~~
