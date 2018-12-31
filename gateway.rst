@@ -9,7 +9,7 @@ Gateway Konfiguration
 Allgemeine Software Pakete
 --------------------------
 
-Diese Anletugn ist auf Debian 9 ausgerichtet
+Diese Anleitung ist auf Debian 9 ausgerichtet
 
 ::
 
@@ -34,7 +34,7 @@ Als root user :code:`sudo su`:
     apt install libnl-3-dev libnl-genl-3-dev libcap-dev pkg-config dkms
 
 Wenn es bereits ein installiertes batman-adv module gibt (selbst
-installiert) dann vorher entfernen.
+installiert), dann vorher entfernen.
 
 ::
 
@@ -42,7 +42,7 @@ installiert) dann vorher entfernen.
     # wenn vorhanden dann
     modprobe -rf batman_adv
 
-Damit Batman bei einem Kernel Update nicht verschindet oder durch die
+Damit Batman bei einem Kernel Update nicht verschwindet oder durch die
 alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
 
 ::
@@ -89,7 +89,7 @@ danach
 fastd
 -----
 
-fastd v18 ist in Debian 9 bereits in den Repositorys enthalten. Unter
+fastd v18 ist in Debian 9 bereits in den Repositories enthalten. Unter
 Debian 8 findet man es in den jessie-backports.
 
 ::
@@ -100,8 +100,8 @@ fastd-Konfiguration
 ~~~~~~~~~~~~~~~~~~~
 
 Wir brauchen für den neuen Server die Schlüssel für fastd. Diese sind in
-Stormarn für 12 Gateways bereits in der Firmware eingetragen und den
-privaten Schlüssel gibt es über Kaj.
+Südholstein für 12 Gateways bereits in der Firmware eingetragen und den
+privaten Schlüssel gibt es über das NOC-Team (noc@freifunk-suedholstein.de).
 
 Im Folgenden wird der sichere private Schlüssel als [SERVER-SECRET-KEY]
 aufgeführt und müssen durch die erzeugten Schlüssel sinnvoll ersetzt
@@ -145,8 +145,8 @@ enthalten:
    mtu 1426;
 
    # Set the methods (aes128-gcm preferred, salsa2012+umac preferred for nodes)
+   method "null";
    method "salsa2012+umac";
-   method "null";  # NUR WENN DAS GW UNVERSCHLÜSSELT ANNEHMEN DARF, Knoten Betreiber in Stormarn und Lauenburg haben die Wahl ob sie Verschlüsseln wollen oder nicht.
 
    #hide ip addresses yes;
    #hide mac addresses yes:
@@ -175,7 +175,7 @@ enthalten:
 
 
 Das Beste ist, wenn man nun die fastd-Konfiguration mal überprüft.
-Vorher muss der Server rebootet werden, damit die vorher durchgeführten
+Vorher muss der Server neugestartet werden, damit die vorher durchgeführten
 Anpassungen auch Wirkung zeigen :-)
 
 Dann als :code:`root` auf der Konsole mit folgender Zeile die fastd
@@ -198,7 +198,7 @@ Wichtig: In der Konfiguration wird jeder Router reingelassen. Das mag
 nicht jeder, aber es vereinfacht die Integration der Router und damit
 auch die Verteilung. Wenn man das nicht möchte, müsste jeder Router
 separat mit seinem öffentlichen Schlüssel unter :code:`.../peers/` hinterlegt
-werden. Auskommentiert ist eine Zeile bei on verify die eine Blacklist
+werden. Auskommentiert ist eine Zeile bei :code:`on verify` die eine Blacklist
 führt. Damit kann man unliebsame Genossen aussperren. Wenn man das haben
 möchte, so ist eine Datei :code:`/etc/fastd/fastd-blacklist.sh` zu erstellen mit
 folgenden Zeilen und dann auch ausführbar zu machen:
@@ -215,7 +215,7 @@ folgenden Zeilen und dann auch ausführbar zu machen:
 
 
 Wie die weiteren Dateien mit der Blacklist aussehen, findet man unter
-diesem Link https://github.com/ffruhr/fastdbl
+diesem Link `<https://github.com/ffruhr/fastdbl>`
 
 Netzwerk Konfiguration
 ----------------------
@@ -224,7 +224,7 @@ IP Forwarding
 ~~~~~~~~~~~~~
 
 In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf` bitte die
-folgenden Zeilen eintragen, damit das IP Forwarding für IPv4 und IPv6
+folgenden Zeilen eintragen, damit das IP-Forwarding für IPv4 und IPv6
 laufen:
 
 ::
@@ -248,7 +248,7 @@ Netzwerk und dem Internet-Ausgang per VPN:
 
 Hinweis: diese Konfiguration ist allgemeingültig für unser Netz. Daher
 ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
-Diese Nummer muss natürlich durchgänig gleich sein, da sonst nichts
+Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
 funktionieren wird!
 
 Bitte die :code:`/etc/network/interfaces` mit Folgenden Zeilen befüllen. Das
@@ -360,7 +360,7 @@ Tabelle 42 geschickt werden.
      COMMIT
 
 
-Nun müssen die IP Tables geladen werden. Bitte erstellt die Datei
+Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
 :code:`/etc/network/if-pre-up.d/iptables` mit folgenden Zeilen:
 
 ::
@@ -403,8 +403,8 @@ Konsole eingeben:
    iptables-restore < /etc/iptables.up.rules
 
 
-VPN
----
+VPN (Mullvad)
+-------------
 
 Achtung: Kopiere bitte nicht die Konfigurationsdateien von einem Gateway
 auf andere Gateways!
@@ -731,7 +731,7 @@ Dann in der Datei :code:`/etc/bind/named.conf.local` folgendes am Ende ergänzen
 Die zugehörigen Zone Dateien werden in einem
 `Repository <https://github.com/ffsh/bind>`__ verwaltet.
 
-Diese sollen automatisch aktuallisert werden.
+Diese sollen automatisch aktualisiert werden.
 
 Als erstes legen wir einen neuen Benutzer an.
 
