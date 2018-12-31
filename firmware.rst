@@ -134,12 +134,12 @@ Jenkins Projekt Bash Befehle
 Changelog
 ---------
 
-Dieses Changelog stellt einen groben überblick über die Änderungen in der Firmware dar.
-Die Versionierung entspricht der versionierung von Gluon. Dieses Changelog bezieht sich auf den :code:`stable` Zweig die anderen Zweige können davon abweichen.
+Dieses Changelog stellt nur die durch uns durchgeführten Änderungen da. Für Änderungen an Gluon (bsp unterstützte Geräte) verweisen wir auf die Dokumentation von Gluon.
+Die Versionierung entspricht der Versionierung von Gluon. Dieses Changelog bezieht sich auf den :code:`stable` Zweig die anderen Zweige können davon abweichen.
 
-2018.1.3 ab build 153
+2018.2 ab build ???
 ~~~~~~~~~~~~~~~~~~~~~
-- fix: fehlendes Paket für die vpn Konfigruation
+- fix: fehlendes Paket für die vpn-Konfiguration
 
 2018.1.1 ab build 141
 ~~~~~~~~~~~~~~~~~~~~~
@@ -155,7 +155,7 @@ Die Versionierung entspricht der versionierung von Gluon. Dieses Changelog bezie
     - Freifunk Stormarn: ffod
     - Freifunk Lauenburg: ffrz
 - bereits mit patches für autoupdater
-- mit Einführung der neuen karte wurde alfred entfernt (auch in 2017.1.x)
+- mit Einführung der neuen Karte wurde alfred entfernt (auch in 2017.1.x)
 
 2018.1 build < 131
 ^^^^^^^^^^^^^^^^^^
