@@ -774,8 +774,8 @@ Zum Schluss starten wir bind neu.
    systemctl restart bind9
 
 
-Mesh Announce (veraltet)
-------------------------
+Mesh Announce
+-------------
 
 Um als Gateway, Server oder alles was kein Freifunk Router ist auf der
 Karte zu erscheinen kann
@@ -802,25 +802,30 @@ aber nicht.
    nano /etc/systemd/system/respondd.service
 
 
-Und an das System anpassen:
+Den Systemd Service passen wir jetzt an unser Netzwerk und Gateway an. Erstmal das Konzept. Wir starten respondd.py mit einigen argumenten:
 
-TODO
+::
+
+   respondd.py -d /opt/mesh-announce/providers -i <your-clientbridge-if> -i <your-mesh-vpn-if> -b <your-batman-if> -m <mesh ipv4 address>
+
 ::
 
 
    your-clientbridge-if - br-ffsh
    your-mesh-vpn-if     - ffsh-mesh
    your-batman-if       - ffsh-mesh
+   mesh ipv4 address    - GW-IPV4
 
-TODO
+Im folgenden Beispiel ist Hopfenbach das Gateway dort sind die Interfaces so wie in der Anleitung benannt und die IP ist :code:`10.144.128.1`.
 ::
 
 
    [Unit]
    Description=Respondd
+   After=network.target
 
    [Service]
-   ExecStart=/opt/mesh-announce/respondd.py -d /opt/mesh-announce -i br-ffrz -i ffrz-mesh -b ffrz-mesh
+   ExecStart=/opt/mesh-announce/respondd.py -d /opt/mesh-announce/providers -i br-ffsh -i ffsh-mesh -b bat0 -m 10.144.128.1
    Restart=always
    Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -828,7 +833,8 @@ TODO
    WantedBy=multi-user.target
 
 
-Dann mit hostname prüfen ob der erwünschte Gateway-Name eingetragen ist
+
+Dann mit :code:`hostname` prüfen ob der erwünschte Gateway-Name eingetragen ist
 ggf. ändern oder:
 
 :code:`/opt/mesh-announce/nodeinfo.d/hostname`
@@ -852,4 +858,3 @@ Dann den Service aktivieren
 
 
 Das System sollte in kürze auf der Karte auftauchen.
-
