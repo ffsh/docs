@@ -86,7 +86,7 @@ Außerdem gibt es eine Reihe von Argumenten.
 +----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
 | --cores  | 1 bis N                        | 1           | Cores        | nein    | Anzahl der zu verwenden Threads, Empfehlung: CPU-Kerne+1                               |
 +----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
-| --log    | w or s                         | s           | Log          | nein    | Log level w: nur Warnungen/Fehler, s: alles                                            |
+| --log    | V=w or V=s                         |   /       | Log          | ja    | Log level w: nur Warnungen/Fehler, s: alles                                            |
 +----------+--------------------------------+-------------+--------------+---------+----------------------------------------------------------------------------------------+
 
 Beispiel
@@ -97,8 +97,8 @@ Beispiel
 
     git clone --recurse https://github.com/ffsh/site.git
     cd site
-    ./build.py -c update -b grotax -n 1 -w $(pwd) --commit $(git rev-parse HEAD)
-    ./build.py -c build -t "ar71xx-tiny" -b grotax -n 1 -w $(pwd) --commit $(git rev-parse HEAD)
+    ./build.py -c update -b grotax -n 1 -w $(pwd) --commit $(git rev-parse HEAD) --log "V=w"
+    ./build.py -c build -t "ar71xx-tiny" -b grotax -n 1 -w $(pwd) --commit $(git rev-parse HEAD) --log "V=w"
 
 In Zeile 1 wird das Repository inklusive der "submodules" geklont. Danach in Zeile 2 wechseln wir in das "site" Verzeichnis.
 Dort führen wir zum ersten mal das :code:`build.py` Skript aus (Zeile 3).
