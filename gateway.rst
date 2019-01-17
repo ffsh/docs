@@ -48,9 +48,10 @@ alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
 ::
 
     cd /usr/src
-    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.3/batman-adv-2018.3.tar.gz
-    tar xfv batman-adv-2018.3.tar.gz
-    cd batman-adv-2018.3/
+    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.4/batman-adv-2018.4.tar.gz
+    tar xfv batman-adv-2018.4.tar.gz
+    rm batman-adv-2018.4.tar.gz
+    cd batman-adv-2018.4/
     nano dkms.conf
 
 Die :code:`dkms.conf` befüllen:
@@ -58,13 +59,13 @@ Die :code:`dkms.conf` befüllen:
 ::
 
     PACKAGE_NAME=batman-adv
-    PACKAGE_VERSION=2018.3
+    PACKAGE_VERSION=2018.4
 
     DEST_MODULE_LOCATION=/extra
     BUILT_MODULE_NAME=batman-adv
     BUILT_MODULE_LOCATION=net/batman-adv
 
-    MAKE="'make' CONFIG_BATMAN_ADV_BATMAN_V=n CONFIG_BATMAN_ADV_DEBUGFS=y"
+    MAKE="'make' CONFIG_BATMAN_ADV_BATMAN_V=n"
     CLEAN="'make' clean"
 
     AUTOINSTALL="yes"
@@ -73,15 +74,16 @@ danach
 
 ::
 
-    dkms add -m batman-adv -v 2018.3
-    dkms build -m batman-adv -v 2018.3
-    dkms install -m batman-adv -v 2018.3
+    dkms add -m batman-adv -v 2018.4
+    dkms build -m batman-adv -v 2018.4
+    dkms install -m batman-adv -v 2018.4
 
 ::
 
-   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.3/batctl-2018.3.tar.gz
-   tar xvf batctl-2018.3.tar.gz
-   cd batctl-2018.3/
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.4/batctl-2018.4.tar.gz
+   tar xvf batctl-2018.4.tar.gz
+   rm batctl-2018.4.tar.gz
+   cd batctl-2018.4/
    make
    make install
 
