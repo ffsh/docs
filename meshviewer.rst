@@ -70,7 +70,7 @@ stellen hier an das Gateway Hopfenbach:
 ::
 
 
-   yanic query --wait 5 bat0 "fddf:0bf7:80::128:1"
+   yanic query --wait 5 br-ffsh "fddf:0bf7:80::128:1"
 
 
 Damit yanic auch als Deamon läuft legen wir noch einen Service an.
