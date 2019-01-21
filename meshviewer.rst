@@ -123,7 +123,7 @@ kurz danach in :code:`[http]`
    systemctl restart influxdb
 
 Nun sollte influxdb nur noch auf localhost erreichbar sein, prüfen kann
-man dies mit netstat -tlpn
+man dies mit :code:`netstat -tlpn`
 
 Grafana
 -------
@@ -142,7 +142,26 @@ Repository installiert.
    sudo apt-get install grafana
 
 
-TODO sichere Konfiguration
+Da Grafana bei uns hinter einem Proxy laufen soll, setzen wir auch hier alle IPs auf :code:`localhost`.
+Am besten einmal am Ende prüfen ob alles richtig konfiguriert ist mit :code:`netstat -tlpn`.
+
+Ein wichtiger Punkt ist der öffentliche Zugang, damit die Statistiken auch von Besuchern abgerufen werden können.
+
+::
+
+
+   #################################### Anonymous Auth ##########################
+   [auth.anonymous]
+   # enable anonymous access
+   enabled = true
+
+   # specify organization name that should be used for unauthenticated users
+   org_name = Freifunk Südholstein
+
+   # specify role for unauthenticated users
+   org_role = Viewer
+
+Die Organisation kann man als Admin in Grafana anlegen.
 
 meshviewer
 ----------
