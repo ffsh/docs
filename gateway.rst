@@ -837,13 +837,17 @@ Im folgenden Beispiel ist Hopfenbach das Gateway dort sind die Interfaces so wie
 Dann mit :code:`hostname` prüfen ob der erwünschte Gateway-Name eingetragen ist
 ggf. ändern oder:
 
-:code:`/opt/mesh-announce/nodeinfo.d/hostname`
+:code:`nano providers/nodeinfo/hostname.py`
 
 ::
 
 
-   #import_module('socket').gethostname()
-   "GW_Hopfenbach"
+  import providers
+  import socket
+  class Source(providers.DataSource):
+      def call(self):
+          return "GW_Barnitz"
+
 
 
 Dann den Service aktivieren
