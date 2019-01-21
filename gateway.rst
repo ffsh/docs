@@ -813,7 +813,7 @@ Den Systemd Service passen wir jetzt an unser Netzwerk und Gateway an. Erstmal d
 
    your-clientbridge-if - br-ffsh
    your-mesh-vpn-if     - ffsh-mesh
-   your-batman-if       - ffsh-mesh
+   your-batman-if       - bat0
    mesh ipv4 address    - GW-IPV4
 
 Im folgenden Beispiel ist Hopfenbach das Gateway dort sind die Interfaces so wie in der Anleitung benannt und die IP ist :code:`10.144.128.1`.
