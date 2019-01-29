@@ -114,8 +114,6 @@ später zusammenfinden können:
 ::
 
    mkdir /ffsh
-   mkdir /ffsh/gateway/peers
-   mkdir /ffsh/gateway/gateways
 
 
 Es ist eine Konfigurationsdatei für fastd notwendig. In der folgenden
@@ -171,6 +169,10 @@ enthalten:
     ip link set dev $INTERFACE up
     ifup bat0
     sh /etc/fastd/ffsh/iptables_ffsh.sh
+   ";
+
+   on down "
+    ifdown bat0
    ";
 
 
@@ -286,9 +288,8 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
        address fddf:0bf7:80::[GW Netz]:1
        netmask 64
 
-       post-up /sbin/ip -6 addr add fddf:0bf7:80::[GW Netz]:1/64 dev br-ffsh
+
        post-up /sbin/ip rule add iif br-ffsh table 42
-       pre-down /sbin/ip -6 addr del fddf:0bf7:80::[GW Netz]:1/64 dev br-ffsh
        pre-down /sbin/ip rule del iif br-ffsh table 42
 
    # Batman Interface
@@ -304,10 +305,10 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
    iface bat0 inet6 manual
        pre-up batctl if add ffsh-mesh
        post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
-       post-up ip link set dev bat0 up # Notwendig?
+       post-up ip link set dev bat0 up
        post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
-       post-up batctl gw server 100 Mbit/ 100 Mbit
+       post-up batctl gw server 100mbit/100mbit
 
        post-up ip rule add from all fwmark 0x1 table 42
 
