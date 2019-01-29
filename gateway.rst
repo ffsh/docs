@@ -5,27 +5,121 @@
 Gateway Konfiguration
 =====================
 
+In diesem Kapitel konfigurieren wir das Gateway dabei gehen wir Schritt für Schritt vor.
+
+Wenn du ein neues Gateway einrichten willst solltest du dir als erstes ein freies aus der Tabelle :ref:`infrastruktur-gateways` aussuchen.
+Wenn du keines der bereits definierten Gateways benutzen möchtest dann brauchst du folgende Daten:
+
+=========== ======= ==========
+Datum       Kürzel  Kommentar
+----------- ------- ----------
+fastd-MAC   $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC  $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4        $IPv4   Feste IPv4 für Freifunk
+IPv6        $IPv6   Feste IPV6 für Freifunk
+Public-IPv4 $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6 $IPv6P  Öffentliche feste IPv6 deines Gateways
+=========== ======= ==========
+
+Zu der :code:`$IPv4` und :code:`$IPv6` gehören natürlich noch jeweils das Passende Netzwerk, welches an die Clients verteilt wird. Wähle also passende Subnetze aus und dazu gehörende Adressen für dein Gateway.
+
+Als nächstes solltest du dir Hardware oder ein VM suchen auf der dein Gateway laufen soll. Dabei gibt es die wichtige Voraussetzung, dass du Kernel-Module installieren kannst dabei kommt es auf die eingesetzte Virtualisierungstechnik an. Wenn der Anbieter kvm benutzt ist alles gut. Wir haben gute Erfahrungen mit der Hetzner Cloud gemacht. Nach dem du dir dein System ausgesucht hast solltest du dir ein Betriebssystem aussuchen wir nehmen Debian (9).
+
+Wenn du den Traffic der Clients nicht direkt an deinem Gateway ins Internet lassen möchtest, dann solltest du dir auch einen VPN-Anbieter suchen. Wir haben gute Erfahrungen mit Mullvad und Private Internet Access gemacht aber es sollten auch andere VPN-Anbieter funktionieren.
+Nach der Standard Debian Installation (minimal reicht). Verbindest du dich mit deinem Gateway. Und wechselst in den Super-User :code:`sudo su`.
 
 Allgemeine Software Pakete
 --------------------------
 
-Diese Anleitung ist auf Debian 9 ausgerichtet
+Zum Einstieg installieren wir einige Pakete die wir später brauchen werden.
 
 ::
 
    sudo apt install build-essential git apt-transport-https bridge-utils ntp net-tools
 
+VPN oder Direkt
+---------------
+
+Spätestens jetzt solltest du dich entschieden haben ob du einen VPN-Anbieter verwenden möchtest oder nicht.
+Die Meisten Anbieter werden eine Anleitung für Debian haben, wenn nicht solltest du vielleicht einen anderen wählen.
+
+Für die Freifunk-Installation interessiert uns am Ende der Name des Interfaces.
+
+Wenn du direkt ausleiten möchtest dann brauchen wir den Namen deines "Internet-Interfaces".
+
+Egal für welche Variante du dich entscheidest wir merken uns den Interface Namen. Zu der Tabelle am Anfang kommt also ein neuer Eintrag.
+
+============== ======= ==========
+Datum          Kürzel  Kommentar
+-------------- ------- ----------
+fastd-MAC      $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC     $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4           $IPv4   Feste IPv4 für Freifunk
+IPv6           $IPv6   Feste IPV6 für Freifunk
+Public-IPv4    $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6    $IPv6P  Öffentliche feste IPv6 deines Gateways
+Exit-Interface $Exit   Das Exit Interface z.b. tun0 oder eth1
+============== ======= ==========
+
+
+Für VPN: Regelmäßig testen
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wenn möglich, dann ist es sinnvoll den VPN-Ausgang regelmäßig zu testen.
+Wenn du auf dem Interface einen Ping an google senden kannst dann eignet sich dieses Skript:
+
+:code:`/root/check-vpn.sh`
+
+::
+
+   #!/bin/bash
+
+   # Test gateway is connected to VPN
+   test=$(ping -q -I $Exit 8.8.8.8 -c 4 -i 1 -W 5 | grep 100 )
+
+   if [ "$test" != "" ]
+       then
+       echo "VPN nicht da - Neustart!"
+       sytemctl restart openvpn       # Fehler - VPN nicht da - Neustart
+   else
+       echo "alles gut"
+   fi
+
+Ersetze hier :code:`$Exit` durch das VPN-Interface
+
+Dann noch das Script ausführbar machen:
+
+::
+
+   chmod u+x /root/check-vpn.sh
+
+
+Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
+und damit regelmäßig der VPN-Status geprüft wird.
+
+::
+
+   # Check VPN via openvpn is running, if not service restart
+   */10 * * * * root /root/check-vpn.sh > /dev/null
+
+Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
+
+::
+
+   systemctl restart cron
+
+Wenn du alles richtig gemacht hast und dein Exit-Interface funktioniert dann gehen wir über zum nächsten Schritt.
 
 Batman und Fastd
 ----------------
 
-Batman Advanced ist das in Südholstein verwendete Routing Verfahren.
-Batman Advanced benötigt ein Kernel Modul und batclt.
+Freifunk Südholstein Benutzt für das Mesh-Netzwerk batman-adv und den Routing-Algorithmus Batman IV. Für die VPN-Tunnel zu den Knoten benutzen wir Fastd.
+Da das Batman-Kernel-Modul nicht in einer aktuellen Version im OS-Repository ist, müssen wir es selber bauen.
 
-Batman Kernel Modul und batctl
+Batman Kernel-Modul und batctl
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Als root user :code:`sudo su`:
+Für Batman gibt es ein Kernel-Modul und ein Kontroll-Programm. Als erstes installieren wir aber ein paar Pakete die wir benötigen.
 
 ::
 
@@ -33,18 +127,8 @@ Als root user :code:`sudo su`:
 
     apt install libnl-3-dev libnl-genl-3-dev libcap-dev pkg-config dkms
 
-Wenn es bereits ein installiertes batman-adv module gibt (selbst
-installiert), dann vorher entfernen.
-
-::
-
-    lsmod | grep batman
-    # wenn vorhanden dann
-    modprobe -rf batman_adv
-
-Damit Batman bei einem Kernel Update nicht verschwindet oder durch die
-alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
-
+Damit bei einem Kernel-Update automatisch ein neues Kernel-Modul gebaut wird, benutzen wir :code:`dkms`.
+Wir wechseln das Verzeichnis, laden batman-adv herunter und legen die Konfiguration an.
 ::
 
     cd /usr/src
@@ -53,7 +137,7 @@ alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
     cd batman-adv-2018.4/
     nano dkms.conf
 
-Die :code:`dkms.conf` befüllen:
+Die :code:`dkms.conf` befüllen wir mit dem folgenden Inhalt:
 
 ::
 
@@ -69,7 +153,9 @@ Die :code:`dkms.conf` befüllen:
 
     AUTOINSTALL="yes"
 
-danach
+danach prüfen wir ob alles funktioniert.
+Mit dem ersten Befehl registrieren wir das Modul bei dkms. Mit dem zweiten Befehl wird das Modul kompiliert.
+Der letzte Befehl installiert das Modul für den aktiven Kernel.
 
 ::
 
@@ -77,14 +163,26 @@ danach
     dkms build -m batman-adv -v 2018.4
     dkms install -m batman-adv -v 2018.4
 
+Wenn es bei einem dieser Schritte zu Problemen kommt, dann prüfe noch mal deine Konfiguration oder wende dich an das NOC.
+
+Nachdem das Kernel-Modul installiert wurde, werden wir :code:`batctl` installieren.
+
 ::
 
+   cd /root
    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.4/batctl-2018.4.tar.gz
    tar xvf batctl-2018.4.tar.gz
    cd batctl-2018.4/
    make
    make install
 
+Hier könntest du einmal einen Reboot machen. Wenn alles geklappt hat, kannst du nach dem Login als super-user :code:`batctl -v` eingeben.
+
+::
+
+   batctl 2018.4 [batman-adv: 2018.4]
+
+Wenn du hier eine andere Ausgabe bekommst, wendest du dich am besten an das NOC.
 
 fastd
 -----
@@ -94,7 +192,7 @@ Debian 8 findet man es in den jessie-backports.
 
 ::
 
-   sudo apt install fastd
+   apt install fastd
 
 fastd-Konfiguration
 ~~~~~~~~~~~~~~~~~~~
@@ -103,132 +201,127 @@ Wir brauchen für den neuen Server die Schlüssel für fastd. Diese sind in
 Südholstein für 12 Gateways bereits in der Firmware eingetragen und den
 privaten Schlüssel gibt es über das NOC-Team (noc@freifunk-suedholstein.de).
 
-Im Folgenden wird der sichere private Schlüssel als [SERVER-SECRET-KEY]
-aufgeführt und müssen durch die erzeugten Schlüssel sinnvoll ersetzt
-werden!
+Für fastd brauchen wir ein Schlüssel-Paar einen public und private Key.
 
-Bitte als root zwei neue Verzeichnisse anlegen. Dort werden die
-Schlüssel für das Freifunknetz hinterlegt, damit Gateway und Router
-später zusammenfinden können:
+Wenn du eines der Gateways aus der Tabelle gewählt hast, dann bekommst du den privaten Schlüssel vom NOC.
+Ist dies nicht der Fall, dann musst du selber ein neues Schlüsselpaar erzeugen.
 
 ::
 
-   mkdir /ffsh
+  fastd --generate-key
+
+Die Schlüssel sicher Verwahren. Der public Key muss später in der Firmware eingetragen werden.
+
+Jetzt konfigurieren wir Fastd bevor es weiter geht noch einmal die Tabelle.
+
+============== ======= ==========
+Datum          Kürzel  Kommentar
+-------------- ------- ----------
+fastd-MAC      $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC     $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4           $IPv4   Feste IPv4 für Freifunk
+IPv6           $IPv6   Feste IPV6 für Freifunk
+Public-IPv4    $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6    $IPv6P  Öffentliche feste IPv6 deines Gateways
+Exit-Interface $Exit   Das Exit Interface z.b. tun0 oder eth1
+Fastd-Private  $FastdP Fastd Private Key
+Fastd-Public   $Fastd  Fastd Public Key
+============== ======= ==========
+
+Als erstes erzeugen wir ein neues Verzeichnis, in dem später die Konfiguration abgelegt wird.
+
+::
+
+   mkdir /etc/fastd/ffsh/
 
 
-Es ist eine Konfigurationsdatei für fastd notwendig. In der folgenden
-Konfiguration bitte die :code:`[EXTERNE-IPv4]` durch die echte IP vom Server
-ersetzen. Wenn es auch eine IPv6 gibt, kann die entsprechende Zeile
-aktiviert werden und benötigt die echte IPv6 :code:`[EXTERNE-IPv6]`. Die
-Konfigurationsdatei :code:`/etc/fastd/ffsh/fastd.conf` soll bitte diese Zeilen
+In diesem Verzeichnis legen wir eine Konfigurationsdatei für fastd an.
+Die Konfigurationsdatei :code:`/etc/fastd/ffsh/fastd.conf` soll diese Zeilen
 enthalten:
 
 ::
 
 
-   # Bind to a fixed address and port, IPv4 and IPv6 at Port 1234
-   bind any:10000 interface "eth0";
-   # bind [EXTERNE-IPv6]:1234 interface "eth0";
+   # Lausche auf jeder IP an Port 10000 auf dem Interface $Exit
+   bind any:10000 interface "$Exit";
 
-   # Set the user, fastd will work as
+   # Fastd soll unter dem Benutzer ffsh laufen
    user "ffsh";
 
-   # Set the interface name
+   # Hier setzen wir den Namen für das fastd Interface
    interface "ffsh-mesh";
 
-   # Set the mode, the interface will work as
+   # Wir benutzen tap
    mode tap;
 
-   # Set the mtu of the interface (salsa2012 with ipv6 will need 1406)
+   # Die MTU ist bei uns 1426 diese muss zu der MTU in der Firmware passen.
    mtu 1426;
 
-   # Set the methods (aes128-gcm preferred, salsa2012+umac preferred for nodes)
+   # Hier sind die Methoden für die Verschleierung "null"->Unverschlüsselt die Reihenfolge bestimmt die Priorität.
    method "null";
    method "salsa2012+umac";
 
-   #hide ip addresses yes;
-   #hide mac addresses yes:
+   # Der private Key
+   secret "$FastdP";
 
-   # Secret key generated by `fastd --generate-key`
-   secret "[SERVER-SECRET-KEY]";
+   # Hier das Log setting es wird nach syslog geschrieben man kann bei Problemen auf von info auf debug umstellen.
+   log to syslog level info;
 
-   # Log everything to syslog
-   log to syslog level debug;
+   # Hier geben wir ein Verzeichnis an wo die anderen Gateways hinterlegt sind.
+   include peers from "gateways/";
 
-   # Include peers from our git-repos
-   #include peers from "peers/"; #optional eigene peers anlegen zb den eigenen toaster mit fastd oder so
-   include peers from "gateways/"; #git repo klonen in /etc/fastd/ffsh/ git clone  https://github.com/ffsh/gateways.git
-
-   # Configure a shell command that is run on connection attempts by unknown peers (true means, all attempts are accepted)
+   # Dieses Einstellung legt fest, dass unbekannte Clients reingelassen werden.
    on verify "true";
+
+   # Es gibt die Möglichkeit mit einer Blacklist zu arbeiten
    # on verify "/etc/fastd/fastd-blacklist.sh $PEER_KEY";
 
-   # Configure a shell command that is run when fastd comes up
+   # Hier sind einige Befehle die ein paar Wichtige dinge machen
    on up "
-    ip link set dev $INTERFACE address 00:5b:27:80:0X:XX           # X für das GW Netz, zB 2:24 für 10.144.224.0/20
-    ip link set dev $INTERFACE up
-    ifup bat0
-    sh /etc/fastd/ffsh/iptables_ffsh.sh
+    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen.
+    ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
+    ifup bat0                                # Batman-Interface aktiv stellen
+    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
+    sh /etc/fastd/ffsh/routing.sh            # Firewall und Routing aktivieren
+    # sh /etc/fastd/ffsh/filtering.sh        # Optional Filterregeln später mehr dazu
    ";
 
+   # Hier wird alles rückgängig gemacht.
    on down "
     ifdown bat0
+    ifdown br-ffsh
+    sh /etc/fastd/ffsh/DROP-routing.sh
+    # sh /etc/fastd/ffsh/DROP-filtering.sh
    ";
 
+Datei speichern und fertig. Hier die neue Tabelle:
 
-Das Beste ist, wenn man nun die fastd-Konfiguration mal überprüft.
-Vorher muss der Server neugestartet werden, damit die vorher durchgeführten
-Anpassungen auch Wirkung zeigen :-)
-
-Dann als :code:`root` auf der Konsole mit folgender Zeile die fastd
-Einstellungen prüfen:
-
-::
-
-   fastd -c /etc/fastd/ffsh/fastd.conf
-
-
-Wenn das erfolgreich war, kann nun fastd gestartet werden, auch wieder
-als root mit:
-
-::
-
-   systemctl start fastd
-
-
-Wichtig: In der Konfiguration wird jeder Router reingelassen. Das mag
-nicht jeder, aber es vereinfacht die Integration der Router und damit
-auch die Verteilung. Wenn man das nicht möchte, müsste jeder Router
-separat mit seinem öffentlichen Schlüssel unter :code:`.../peers/` hinterlegt
-werden. Auskommentiert ist eine Zeile bei :code:`on verify` die eine Blacklist
-führt. Damit kann man unliebsame Genossen aussperren. Wenn man das haben
-möchte, so ist eine Datei :code:`/etc/fastd/fastd-blacklist.sh` zu erstellen mit
-folgenden Zeilen und dann auch ausführbar zu machen:
-
-::
-
-   #!/bin/bash
-   PEER_KEY=$1
-   if /bin/grep -Fq $PEER_KEY /etc/fastd/fastd-blacklist.json; then
-       exit 1
-   else
-       exit 0
-   fi
-
-
-Wie die weiteren Dateien mit der Blacklist aussehen, findet man unter
-diesem Link `<https://github.com/ffruhr/fastdbl>`
+=============== ======= ==========
+Datum           Kürzel  Kommentar
+--------------- ------- ----------
+fastd-MAC       $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC      $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4            $IPv4   Feste IPv4 für Freifunk
+IPv6            $IPv6   Feste IPV6 für Freifunk
+Public-IPv4     $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6     $IPv6P  Öffentliche feste IPv6 deines Gateways
+Exit-Interface  $Exit   Das Exit Interface z.b. tun0 oder eth1
+Fastd-Private   $FastdP Fastd Private Key
+Fastd-Public    $Fastd  Fastd Public Key
+Fastd-Interface $FastdI Fastd Interface
+=============== ======= ==========
 
 Netzwerk Konfiguration
 ----------------------
 
+Im Folgenden werden wir das Routing und die Netzwerkschnittstellen auf dem Gateway einrichten.
+Du solltest die IP-Adressen deines Gateways bereit halten.
+
 IP Forwarding
 ~~~~~~~~~~~~~
 
-In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf` bitte die
-folgenden Zeilen eintragen, damit das IP-Forwarding für IPv4 und IPv6
-laufen:
-
+Als erstes richten wir IP-Forwarding ein, damit IP-Pakete an andere Geräte weitergeleitet werden.
+In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf`:
 ::
 
    # IPv4 Forwarding
@@ -241,81 +334,45 @@ laufen:
 Interfaces Konfigurieren
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Nun kommt das eigentlich wichtigste. Das Netzwerk muss eingerichtet
-werden, so das die einzelnen Schnittstelle bereitstehen und eine Art
-Brücke vom Freifunknetz in das Internet aufbauen.
+Als nächstes werden die Netzwerkschnittstellen :code:`bat0` und :code:`br-ffsh` eingerichtet.
 
-Als erstes kommt die Netzwerkbrücke (Schnittstelle zwischen dem "Mesh"
-Netzwerk und dem Internet-Ausgang per VPN:
-
-Hinweis: diese Konfiguration ist allgemeingültig für unser Netz. Daher
-ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
-Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
-funktionieren wird!
-
-Bitte die :code:`/etc/network/interfaces` mit Folgenden Zeilen befüllen. Das
-eth0 sollte so belassen werden, wie es bereits eingerichtet war, damit
-die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
+In :code:`/etc/network/interfaces` fügen wir die folgenden Zeilen ein,
+dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwerk kannst du der Tabelle in :ref:`infrastruktur-gateways` entnehmen.
 
 ::
 
 
-   # The loopback network interface
-   auto lo
-   iface lo inet loopback
+   #
+   # Netwerkbrücke für Freifunk
+   # Hier läuft der Traffic von den einzelnen Routern und dem externen VPN zusammen.
+   # Unter der hier konfigurierten IP ist der Server selber im Freifunk Netz erreichbar.
+   # bridge_ports none sorgt dafür, dass die Brücke auch ohne Interface erstellt wird.
+   #
 
-   # The primary network interface (here it's a local network)
-   allow-hotplug eth0
-   iface eth0 inet static
-       address 192.168.1.100
-       netmask 255.255.255.224
-       network 192.168.1.0
-       gateway 192.168.1.1
-       dns-nameservers 10.144.0.1 85.214.20.141 213.73.91.35
-
-   # Netwerkbruecke fuer Freifunk
-   # - Hier laeuft der Traffic von den einzelnen Routern und dem externen VPN zusammen
-   # - Unter der hier konfigurierten IP ist der Server selber im Freifunk Netz erreichbar
-   # - bridge_ports none sorgt dafuer, dass die Bruecke auch ohne Interface erstellt wird
-
-   auto br-ffsh
+   allow-hotplug br-ffsh
    iface br-ffsh inet static
-       address 10.144.[GW Netz].1
+       address 10.144.[GW Netz].1 # Deine Gateway IPv4-Adresse
        netmask 255.255.0.0
        bridge_ports none
 
    iface br-ffsh inet6 static
-       address fddf:0bf7:80::[GW Netz]:1
+       address fddf:0bf7:80::[GW Netz]:1 # Deine Gateway IPv6-Adresse
        netmask 64
-
-
-       post-up /sbin/ip rule add iif br-ffsh table 42
-       pre-down /sbin/ip rule del iif br-ffsh table 42
-
-   # Batman Interface
-   # - Erstellt das virtuelle Inteface fuer das Batman-Modul und bindet dieses an die Netzwerkbruecke
-   # - Die unten angelegte Routing-Tabelle wird spaeter fuer das Routing innerhalb von Freifunk (Router/VPN) verwendet
    #
-   # Nachdem das Interface gestartet ist, wird eine IP-Regel angelegt, die besagt, dass alle Pakete, die über das bat0-Interface eingehen,
-   # und mit 0x1 markiert sind, über die Routing-Tabelle 42 geleitet werden.
-   # Dies ist wichtig, damit die Pakete aus dem Mesh wirklich über das VPN raus gehen.
+   # Batman Interface
+   # Erstellt das virtuelle Inteface für das Batman-Modul und bindet dieses an die Netzwerkbrücke
    #
 
    allow-hotplug bat0
    iface bat0 inet6 manual
        pre-up batctl if add ffsh-mesh
        post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
-       post-up ip link set dev bat0 up
+
        post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
        post-up batctl gw server 100mbit/100mbit
 
-       post-up ip rule add from all fwmark 0x1 table 42
-
        pre-down brctl delif br-ffsh bat0 || true
-       down ip link set dev bat0 down
-
-
 
 Die :code:`/etc/hosts` mit Folgenden Zeilen befüllen:
 
@@ -333,196 +390,187 @@ IP Tables
 
 Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
 
-Damit werden alle Pakete, die über die Bridge rein kommen, mit dem
-0x1-Flag markiert, und damit über Routing-Tabelle 42 geschickt. Es gibt
-noch 2 Regeln für DNS, dass auch DNS-Pakete (Port 53 TCP/UDP) über die
-Tabelle 42 geschickt werden.
-
 ::
 
+   *filter
+   :INPUT ACCEPT [0:0]
+   :FORWARD ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   COMMIT
+   *mangle
+   :PREROUTING ACCEPT [0:0]
+   :INPUT ACCEPT [0:0]
+   :FORWARD ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   :POSTROUTING ACCEPT [0:0]
+   COMMIT
+   *nat
+   :PREROUTING ACCEPT [0:0]
+   :INPUT ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   :POSTROUTING ACCEPT [0:0]
+   COMMIT
 
-     *filter
-     :INPUT ACCEPT [0:0]
-     :FORWARD ACCEPT [0:0]
-     :OUTPUT ACCEPT [0:0]
-     COMMIT
-     *mangle
-     :PREROUTING ACCEPT [0:0]
-     :INPUT ACCEPT [0:0]
-     :FORWARD ACCEPT [0:0]
-     :OUTPUT ACCEPT [0:0]
-     :POSTROUTING ACCEPT [0:0]
-     COMMIT
-     *nat
-     :PREROUTING ACCEPT [0:0]
-     :INPUT ACCEPT [0:0]
-     :OUTPUT ACCEPT [0:0]
-     :POSTROUTING ACCEPT [0:0]
-     COMMIT
-
+Damit wurden nun Default-Policys festgelegt.
 
 Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
 :code:`/etc/network/if-pre-up.d/iptables` mit folgenden Zeilen:
 
 ::
 
-
    #!/bin/sh
    /sbin/iptables-restore < /etc/iptables.up.rules
 
 
-Bitte nun noch eine Datei :code:`/etc/fastd/ffsh/iptables\_ffsh.sh` erstellen,
-die alle Routing iptables Vorgaben enthält:
+Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden in :code:`/etc/fastd/ffsh/routing.sh` gespeichert.
+
+::
+
+   #!/bin/sh
+
+   #
+   # Routing table
+   #
+
+   # Route zurück ins Freifunk Netzwerk
+   /sbin/ip route add table 42 10.144.0.0/16 dev br-ffsh src 10.144.[$GW].1
+   # Route nach link-local
+   /sbin/ip route add table 42 128/1 dev tun0
+   # Route für den Rest, Internet und so
+   /sbin/ip route add table 42 0/1 dev tun0
+
+   # Alle Pakete von interface "br-ffsh" über Tabelle 42
+   /sbin/ip rule add table 42 iif br-ffsh
+   # Alle Pakete mit der Markierung 0x1 über Tabelle 42
+   /sbin/ip rule add table 42 from all fwmark 0x1
+
+   #
+   # Firewall Rules
+   #
+
+   # Alle Pakete aus Freifunk mit 0x1 markieren
+   /sbin/iptables -t mangle -I PREROUTING -s 10.144.0.0/16 -j MARK --set-mark 0x1
+   # Traffic vom Gateway Richtung Freifunk markieren mit 0x1
+   /sbin/iptables -t mangle -I OUTPUT -s 10.144.0.0/16 -j MARK --set-mark 0x1
+   # NAT
+   /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
+
+Besonders bei direkter Ausleitung des Traffics ist es wichtig IP-Bereiche, die im Internet nicht gerouted werden können, zu filtern. Auf Gateways mit VPN Tunnel tut es aber nicht weh, hier ist das exit-interface der VPN-Tunnel.
+
+:code:`/etc/fastd/ffsh/filtering.sh`
+
+::
+
+   #!/bin/sh
+
+   #
+   # Filter
+   #
+   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 169.254.0.0/16 -j DROP
+   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 172.16.0.0/12 -j DROP
+   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 127.0.0.0/8 -j DROP
+   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
+   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 192.168.0.0/16 -j DROP
+
+   /sbin/iptables -A FORWARD -d 169.254.0.0/16 -j DROP
+   /sbin/iptables -A FORWARD -d 172.16.0.0/12 -j DROP
+   /sbin/iptables -A FORWARD -d 127.0.0.0/8 -j DROP
+   /sbin/iptables -A FORWARD -d 192.168.0.0/16 -j DROP
+
+   /sbin/iptables -A FORWARD -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
+
+   /sbin/ip6tables -A FORWARD -p tcp --dport 7 -j DROP
+   /sbin/iptables -A FORWARD -p tcp --dport 68 -j DROP
+   /sbin/ip6tables -A FORWARD -p tcp --dport 546 -j DROP
+
+
+Um die Regeln beim stoppen oder neustarten von fastd zu entfernen legen wir weitere Skripte an:
+
+Für das Routing :code:`/etc/fastd/ffsh/routing-DROP.sh`.
 
 ::
 
 
    #!/bin/sh
-   /sbin/ip route add default via [EXTERNE-IPv4] table 42
-   /sbin/ip route add 10.144.0.0/16 dev br-ffsh src 10.144.[GW Netz].1 table 42
-   /sbin/ip route add 0/1 dev tun0 table 42
-   /sbin/ip route add 128/1 dev tun0 table 42
-   /sbin/ip route del default via [EXTERNE-IPv4] table 42
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE > /dev/null 2>&1
-   /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -o tun0 -j MASQUERADE > /dev/null 2>&1
-   /sbin/iptables -t mangle -D PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
-   /sbin/iptables -t mangle -I PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
-   /sbin/iptables -t mangle -D OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
-   /sbin/iptables -t mangle -I OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
 
+   #
+   # DROP Routing-Table
+   #
 
-Jetzt müssen die für Linux ausführbar werden. Dazu dies als root auf der
-Konsole eingeben:
+   /sbin/ip route del table 42 10.144.0.0/16 dev br-ffsh src 10.144.[$GW].1
+   /sbin/ip route del table 42 128/1 dev tun0
+   /sbin/ip route del table 42 0/1 dev tun0
+
+   /sbin/ip rule del table 42 iif br-ffsh
+   /sbin/ip rule del table 42 from all fwmark 0x1
+
+   #
+   # DROP Firewall-Rules
+   #
+
+   /sbin/iptables -t mangle -D PREROUTING -s 10.144.0.0/16 -j MARK --set-mark 0x1
+   /sbin/iptables -t mangle -D OUTPUT -s 10.144.0.0/16 -j MARK --set-mark 0x1
+   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
+
+Und für die Filter :code:`/etc/fastd/ffsh/filtering-DROP.sh`
 
 ::
 
 
-   chmod +x /etc/network/if-pre-up.d/iptables
-   chmod +x /etc/fastd/ffsh/iptables_ffsh.sh
+   #!/bin/sh
+
+   #
+   # DROP Filter
+   #
+
+   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 169.254.0.0/16 -j DROP
+   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 172.16.0.0/12 -j DROP
+   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 127.0.0.0/8 -j DROP
+   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
+   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 192.168.0.0/16 -j DROP
+
+   /sbin/iptables -D FORWARD -d 169.254.0.0/16 -j DROP
+   /sbin/iptables -D FORWARD -d 172.16.0.0/12 -j DROP
+   /sbin/iptables -D FORWARD -d 127.0.0.0/8 -j DROP
+   /sbin/iptables -D FORWARD -d 192.168.0.0/16 -j DROP
+
+   /sbin/iptables -D FORWARD -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
+
+   /sbin/ip6tables -D FORWARD -p tcp --dport 7 -j DROP
+   /sbin/iptables -D FORWARD -p tcp --dport 68 -j DROP
+   /sbin/ip6tables -D FORWARD -p tcp --dport 546 -j DROP
+
+Jetzt sollten vier Skripte in dem Verzeichnis liegen:
+
+::
+
+
+   /etc/fastd/ffsh/routing.sh        # Skript für das Routing
+   /etc/fastd/ffsh/filtering.sh      # Skript für filtern privater IP-Räume etc.
+   /etc/fastd/ffsh/routing-DROP.sh   # Skript zum entfernen der Routing-Regeln
+   /etc/fastd/ffsh/filtering-DROP.sh #Skript zum entfernen der Filter-Regeln
+
+Die Skripte machen wir nun ausführbar:
+
+::
+
+
+   chmod 700 /etc/fastd/ffsh/routing.sh
+   chmod 700 /etc/fastd/ffsh/filtering.sh
+   chmod 700 /etc/fastd/ffsh/routing-DROP.sh
+   chmod 700 /etc/fastd/ffsh/filtering-DROP.sh
+
+
+   chmod 700 /etc/network/if-pre-up.d/iptables
+
+Zum Schluss laden wir die Default-Policys:
+
+::
+
 
    iptables-restore < /etc/iptables.up.rules
 
-
-VPN (Mullvad)
--------------
-
-Achtung: Kopiere bitte nicht die Konfigurationsdateien von einem Gateway
-auf andere Gateways!
-
-Für das VPN werden diese Dateien benötigt, die alle nach :code:`/etc/openvpn/`
-müssen:
-
-::
-
-   ca.crt
-   crl.pem
-   mullvad.crt
-   mullvad.key
-   mullvad_linux.conf
-
-
-Die Datei :code:`mullvad\_linux.conf` muss noch um folgende Zeilen am Ende
-ergänzt werden:
-
-::
-
-
-   #custom
-   route-noexec
-   up /etc/openvpn/mullvad_up.sh
-   up /etc/fastd/ffsh/iptables_ffsh.sh
-
-
-Mullvad hat an seinen Konfigurationen seit mehreren Sicherheitslücken
-bei OpenVPN und Snowden/NSA geändert. Es kann sein, dass ein Fehler zur
-Cipher-Liste angezeigt wird. Dann muss in der :code:`mullvad\_linux.conf` die
-Zeile zur TLS-Verschlüsselung beginnend tls-cipher auskommentiert
-werden. Wenn kein IPv6 am Server ins Internet möglich ist, kann auch
-tun-ipv6 auskommentiert werden.
-
-Die Datei :code:`/etc/openvpn/mullvad\_up.sh` gibt es noch nicht.Also bitte die
-Datei mit folgenden Zeilen anlegen:
-
-::
-
-   #!/bin/sh
-   ip route replace 0.0.0.0/1 via $5 table 42
-   ip route replace 128.0.0.0/1 via $5 table 42
-
-   service dnsmaq restart
-   exit 0
-
-
-Diese Datei muss nun auch als :code:`root` ausführbar gemacht werden:
-
-::
-
-    chmod +x /etc/openvpn/mullvad\_up.sh
-
-Damit Linux auch diese VPN-Schnittstelle kennt, muss tun in der Datei
-:code:`/etc/modules` bekannt gemacht werden. OpenVPN benötigt ein tun-Interface.
-Trage einfach in eine eigene neue Zeile dies ein
-
-::
-
-   tun
-
-
-Bitte nun als :code:`root` über die Konsole tun aktivieren und den VPN starten
-mit:
-
-::
-
-   modprobe tun
-   service openvpn start
-
-
-VPN-Connect regelmäßig überprüfen
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Es ist sinnvoll regelmäßig zu prüfen, ob die VPN Verbindung noch aktiv
-ist. Dazu wird ein Script auf dem Server abgelegt, dass dann über den
-CRON immer neu den VPN-Connect prüft.
-
-:code:`/ffsh/check-vpn.sh`
-
-::
-
-   #!/bin/bash
-
-   # Test gateway is connected to VPN
-   test=$(ping -q -I tun0 8.8.8.8 -c 4 -i 1 -W 5 | grep 100 )
-
-   if [ "$test" != "" ]
-       then
-       echo "VPN nicht da - Neustart!"
-       service openvpn restart      # Fehler - VPN nicht da - Neustart
-   else
-       echo "alles gut"
-   fi
-
-
-Dann noch das Script ausführbar machen:
-
-::
-
-   chmod ug+x /ffsh/check-vpn.sh
-
-
-Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
-und damit regelmäßig der VPN-Status geprüft wird.
-
-::
-
-   # Check VPN via openvpn is running, if not service restart
-   */10 * * * * root /ffsh/check-vpn.sh > /dev/null
-
-Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
-
-::
-
-   service cron restart
+Die anderen Regeln werden über fastd gestartet.
 
 
 DHCP
