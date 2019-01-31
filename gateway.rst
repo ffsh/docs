@@ -116,6 +116,14 @@ später zusammenfinden können:
    mkdir /ffsh
 
 
+Außerdem benötigen wir einen user ohne root-Rechte als der fastd laufen kann.
+
+::
+
+   adduser --disabled-login --no-create-home ffsh
+   
+Die darauf folgenden Fragen nach Namen, Orten und Firmenzugehörigkeit können alle leer gelassen werden.
+
 Es ist eine Konfigurationsdatei für fastd notwendig. In der folgenden
 Konfiguration bitte die :code:`[EXTERNE-IPv4]` durch die echte IP vom Server
 ersetzen. Wenn es auch eine IPv6 gibt, kann die entsprechende Zeile
