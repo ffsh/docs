@@ -431,7 +431,7 @@ ergänzt werden:
    #custom
    route-noexec
    up /etc/openvpn/mullvad_up.sh
-   up /etc/fastd/ffsh/iptables_ffsh.sh
+
 
 
 Mullvad hat an seinen Konfigurationen seit mehreren Sicherheitslücken
