@@ -234,6 +234,13 @@ Als erstes erzeugen wir ein neues Verzeichnis, in dem später die Konfiguration 
 
    mkdir /etc/fastd/ffsh/
 
+Außerdem benötigen wir einen Nutzer ohne root-Rechte, unter dem fastd laufen kann.
+
+::
+
+   adduser --disabled-login --no-create-home ffsh
+
+Die darauf folgenden Fragen nach Namen, Orten und Firmenzugehörigkeit können alle leer gelassen werden.
 
 In diesem Verzeichnis legen wir eine Konfigurationsdatei für fastd an.
 Die Konfigurationsdatei :code:`/etc/fastd/ffsh/fastd.conf` soll diese Zeilen
