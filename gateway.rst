@@ -5,10 +5,9 @@
 Gateway Konfiguration
 =====================
 
-In diesem Kapitel konfigurieren wir das Gateway dabei gehen wir Schritt für Schritt vor.
-
-Wenn du ein neues Gateway einrichten willst solltest du dir als erstes ein freies aus der Tabelle :ref:`infrastruktur-gateways` aussuchen.
-Wenn du keines der bereits definierten Gateways benutzen möchtest dann brauchst du folgende Daten:
+Wenn du ein neues Gateway einrichten willst, solltest du dir als erstes ein freies aus der Tabelle :ref:`infrastruktur-gateways` aussuchen.
+Du könntest auch ein neues Gateway definieren, dieses muss natürlich zur restlichen Infrastruktur passen und in der Firmware eingetragen werden.
+Für die Einrichtung brauchen wir dann folgende Daten:
 
 ============ ======= ==========
 Datum        Kürzel  Kommentar
@@ -22,25 +21,61 @@ Public-IPv4  $IPv4P  Öffentliche feste IPv4 deines Gateways
 Public-IPv6  $IPv6P  Öffentliche feste IPv6 deines Gateways
 ============ ======= ==========
 
-Zu der :code:`$IPv4` und :code:`$IPv6` gehören natürlich noch jeweils das Passende Netzwerk, welches an die Clients verteilt wird. Wähle also passende Subnetze aus und dazu gehörende Adressen für dein Gateway.
+Zu der :code:`$IPv4` und :code:`$IPv6` gehören natürlich noch jeweils das passende Netzwerk, welches an die Clients verteilt wird. Wähle also passende Subnetze aus und dazu gehörende Adressen für dein Gateway. Für unsere vordefinierten Gateways sind diese Daten bereits festgelegt.
 
-Als nächstes solltest du dir Hardware oder ein VM suchen auf der dein Gateway laufen soll. Dabei gibt es die wichtige Voraussetzung, dass du Kernel-Module installieren kannst dabei kommt es auf die eingesetzte Virtualisierungstechnik an. Wenn der Anbieter kvm benutzt ist alles gut. Wir haben gute Erfahrungen mit der Hetzner Cloud gemacht. Nach dem du dir dein System ausgesucht hast solltest du dir ein Betriebssystem aussuchen wir nehmen Debian (9).
+Als nächstes solltest du dir Hardware oder eine VM suchen, auf der dein Gateway laufen soll.
+Dabei gibt es eine zwingende Voraussetzung, denn du musst in der Lage sein einen eigenen Kernel zu verwenden, informiere dich also vorher ob du bei der eingesetzten Virtualisierungslösung einen eigenen Kernel verwenden kannst. Bei `KVM <https://de.wikipedia.org/wiki/Kernel-based_Virtual_Machine>`_ geht das ohne Probleme.
+
+Die sonstigen Spezifikation hängen stark von der Anzahl der Knoten und Clients in deinem Netzwerk ab. Bei uns reichen aktuell die günstigen VMs aus der Hetzner Cloud.
+
+Als Betriebssystem hat sich Debian etabliert, die Anleitung setzt auf Debian 9.
 
 Wenn du den Traffic der Clients nicht direkt an deinem Gateway ins Internet lassen möchtest, dann solltest du dir auch einen VPN-Anbieter suchen. Wir haben gute Erfahrungen mit Mullvad und Private Internet Access gemacht aber es sollten auch andere VPN-Anbieter funktionieren.
-Nach der Standard Debian Installation (minimal reicht). Verbindest du dich mit deinem Gateway. Und wechselst in den Super-User :code:`sudo su`.
 
-Allgemeine Software Pakete
---------------------------
+Nach der Standard Debian Installation (minimal reicht). Verbindest du dich mit deinem Gateway. Dann wechselst du falls Notwendig in den :code:`root` Nutzer.
+
+Allgemeines
+-----------
 
 Zum Einstieg installieren wir einige Pakete die wir später brauchen werden.
 
 ::
 
-   sudo apt install build-essential git apt-transport-https bridge-utils ntp net-tools
+   apt install build-essential git apt-transport-https bridge-utils ntp net-tools
+
+Wir legen auch einen neuen Nutzer an.
 
 ::
 
    adduser ffsh
+   usermod -aG sudo ffsh
+
+VPN-Exit || RAW-Exit
+--------------------
+
+Spätestens jetzt solltest du dich entschieden haben ob du einen VPN-Anbieter verwenden möchtest (VPN-Exit) oder nicht (RAW-Exit).
+Die Meisten Anbieter werden eine Anleitung für Debian haben, wenn nicht solltest du vielleicht einen anderen wählen.
+
+Wenn du einen VPN-Exit erstellen möchtest, dann solltest du auch noch herausfinden wie du bei "on up" und "on down" jeweils ein Skript ausführen kannst.
+
+Wir erweitern die Tabelle um zwei Einträge:
+
+1. Das Internet-Interface deines Servers.
+2. Das Exit-Interface, wenn du ein VPN-Exit erstellst, dann ist dies dein VPN-Interface. Wenn du allerdings ein RAW-Exit machst, dann trägst du hier auch das Internet-Interface ein.
+
+================== ======= ==========
+Datum              Kürzel  Kommentar
+------------------ ------- ----------
+fastd-MAC          $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC         $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4               $IPv4   Feste IPv4 für Freifunk
+IPv6               $IPv6   Feste IPV6 für Freifunk
+Gateway-Name       $gwName Name deines Gateways
+Public-IPv4        $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6        $IPv6P  Öffentliche feste IPv6 deines Gateways
+Internet-Interface $InetI  Das Internet-Interface deines Servers
+Exit-Interface     $ExitI  Das Exit-Interface
+================== ======= ==========
 
 Batman
 ------
@@ -55,7 +90,9 @@ Für Batman gibt es ein Kernel-Modul und ein Kontroll-Programm. Als erstes insta
 
 ::
 
-    apt install linux-headers-amd64
+    apt update && apt upgrade
+
+    apt install linux-headers-amd64 sudo
 
     apt install libnl-3-dev libnl-genl-3-dev libcap-dev pkg-config dkms
 
@@ -85,7 +122,7 @@ Die :code:`dkms.conf` befüllen wir mit dem folgenden Inhalt:
 
     AUTOINSTALL="yes"
 
-danach prüfen wir ob alles funktioniert.
+Danach prüfen wir ob alles funktioniert.
 Mit dem ersten Befehl registrieren wir das Modul bei dkms. Mit dem zweiten Befehl wird das Modul kompiliert.
 Der letzte Befehl installiert das Modul für den aktiven Kernel.
 
@@ -116,32 +153,8 @@ Hier könntest du einmal einen Reboot machen. Wenn alles geklappt hat, kannst du
 
 Wenn du hier eine andere Ausgabe bekommst, wendest du dich am besten an das NOC.
 
-Routing
--------
-
-Spätestens jetzt solltest du dich entschieden haben ob du einen VPN-Anbieter verwenden möchtest oder nicht.
-Die Meisten Anbieter werden eine Anleitung für Debian haben, wenn nicht solltest du vielleicht einen anderen wählen.
-
-Wenn du einen VPN-Exit erstellen möchtest, dann solltest du auch noch herrausfinden wie du bei "on up" und "on down" jeweils ein Skript ausführen kannst.
-
-Wir erweitern die Tabelle um zwei Einträge 1: Das Internet-Interface deines Servers. 2: Das Exit-Interface, wenn du ein VPN-Exit erstellst, dann ist dies dein VPN-Interface. Wenn du allerdings ein RAW-Exit machst, dann trägst du hier auch das Internet-Interface ein.
-
-================== ======= ==========
-Datum              Kürzel  Kommentar
------------------- ------- ----------
-fastd-MAC          $MACf   Die MAC-Adresse für den Fastd Tunnel
-batman-MAC         $MACb   Die MAC-Adresse für das Batman Inteface
-IPv4               $IPv4   Feste IPv4 für Freifunk
-IPv6               $IPv6   Feste IPV6 für Freifunk
-Gateway-Name       $gwName Name deines Gateways
-Public-IPv4        $IPv4P  Öffentliche feste IPv4 deines Gateways
-Public-IPv6        $IPv6P  Öffentliche feste IPv6 deines Gateways
-Internet-Interface $InetI  Das Internet-Interface deines Servers
-Exit-Interface     $ExitI  Das Exit-Interface
-================== ======= ==========
-
 fastd
-~~~~~
+-----
 
 ::
 
@@ -160,7 +173,7 @@ Ist dies nicht der Fall, dann musst du selber ein neues Schlüsselpaar erzeugen.
 
   fastd --generate-key
 
-Die Schlüssel sicher Verwahren. Der public Key muss später in der Firmware eingetragen werden.
+Die Schlüssel sicher Verwahren. Der public Key muss natürlich mit in die Firmware Konfiguration auch die anderen Gateways brauchen eine peer Konfiguration. Wie diese aussieht kannst du auf `GitHub <https://github.com/ffsh/Gateways>`_ sehen.
 
 Jetzt konfigurieren wir Fastd bevor es weiter geht noch einmal die Tabelle.
 
@@ -179,6 +192,9 @@ Exit-Interface     $ExitI  Das Exit-Interface
 Fastd-Private      $FastdP Fastd Private Key
 Fastd-Public       $Fastd  Fastd Public Key
 ================== ======= ==========
+
+Konfiguration
+~~~~~~~~~~~~~
 
 Als erstes erzeugen wir ein neues Verzeichnis, in dem später die Konfiguration abgelegt wird.
 
@@ -235,7 +251,7 @@ enthalten:
     ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
     ifup bat0                                # Batman-Interface aktiv stellen
     ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
-    sh /etc/fastd/ffsh/routing.sh       # Firewall und Routing aktivieren
+    sh /etc/fastd/ffsh/routing.sh            # Firewall und Routing aktivieren
    ";
 
    on down "
@@ -267,8 +283,8 @@ Fastd-Interface    $FastdI Fastd Interface
 ================== ======= ==========
 
 
-IP-Forwarding
-~~~~~~~~~~~~~
+Netzwerk
+--------
 
 Als erstes richten wir IP-Forwarding ein, damit IP-Pakete an andere Geräte weitergeleitet werden.
 In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf`:
@@ -343,8 +359,8 @@ Achtung! Vermutlich enthält deine :code:`/etc/hosts bereits Einträge für dien
    $IPv4                      $gwName.freifunk-suedholstein.de $gwName
    $IPv6                      $gwName.freifunk-suedholstein.de $gwName
 
-IPTables
-~~~~~~~~
+IPTables: Defaults
+~~~~~~~~~~~~~~~~~~
 
 Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
 
@@ -379,8 +395,15 @@ Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
    #!/bin/sh
    /sbin/iptables-restore < /etc/iptables.up.rules
 
-IPTables: Routing
-~~~~~~~~~~~~~~~~~
+Zum Schluss laden wir die Default-Policys:
+
+::
+
+   chmod 700 /etc/network/if-pre-up.d/iptables
+   iptables-restore < /etc/iptables.up.rules
+
+Routing: fastd
+~~~~~~~~~~~~~~
 
 Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden in :code:`/etc/fastd/ffsh/routing.sh` gespeichert.
 
@@ -415,8 +438,18 @@ Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden
    # NAT
    /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
 
-IPTables: Exit
-~~~~~~~~~~~~~~
+::
+
+   /etc/fastd/ffsh/routing.sh        # Skript für das Routing
+   /etc/fastd/ffsh/routing-DROP.sh   # Skript zum entfernen der Routing-Regeln
+
+::
+
+   chmod 700 /etc/fastd/ffsh/routing.sh
+   chmod 700 /etc/fastd/ffsh/routing-DROP.sh
+
+Routing: Exit
+~~~~~~~~~~~~~
 
 Besonders bei direkter Ausleitung des Traffics ist es wichtig IP-Bereiche, die im Internet nicht gerouted werden können, zu filtern. Auf Gateways mit VPN Tunnel tut es aber nicht weh, hier ist das exit-interface der VPN-Tunnel.
 
@@ -462,8 +495,8 @@ Und für die Filter :code:`/home/ffsh/DROP-exit.sh`
    # Routing
    #
 
-   /sbin/ip route replace table ffsh 128/1 dev $ExitI
-   /sbin/ip route replace table ffsh 0/1 dev $ExitI
+   /sbin/ip route replace table ffsh 128/1 reject
+   /sbin/ip route replace table ffsh 0/1 reject
 
    #!/bin/sh
 
@@ -488,53 +521,35 @@ Und für die Filter :code:`/home/ffsh/DROP-exit.sh`
    /sbin/iptables -D FORWARD -p tcp --dport 68 -j DROP
    /sbin/ip6tables -D FORWARD -p tcp --dport 546 -j DROP
 
-Jetzt sollten vier Skripte in dem Verzeichnis liegen:
 
 ::
 
-
-   /etc/fastd/ffsh/routing.sh        # Skript für das Routing
    /etc/fastd/ffsh/filtering.sh      # Skript für filtern privater IP-Räume etc.
-   /etc/fastd/ffsh/routing-DROP.sh   # Skript zum entfernen der Routing-Regeln
-   /etc/fastd/ffsh/filtering-DROP.sh #Skript zum entfernen der Filter-Regeln
+   /etc/fastd/ffsh/filtering-DROP.sh # Skript zum entfernen der Filter-Regeln
 
 Die Skripte machen wir nun ausführbar:
 
 ::
 
-
-   chmod 700 /etc/fastd/ffsh/routing.sh
-   chmod 700 /etc/fastd/ffsh/filtering.sh
-   chmod 700 /etc/fastd/ffsh/routing-DROP.sh
-   chmod 700 /etc/fastd/ffsh/filtering-DROP.sh
-
-
-   chmod 700 /etc/network/if-pre-up.d/iptables
-
-Zum Schluss laden wir die Default-Policys:
-
-::
-
-
-   iptables-restore < /etc/iptables.up.rules
+   chmod 700 /home/ffsh/exit.sh
+   chmod 700 /home/ffsh/DROP-exit.sh
 
 
 
 
 
 
+Dienste
+-------
 
 
-DHCP
-----
+
+DHCP & radvd
+~~~~~~~~~~~~
 
 ::
 
    apt install radvd isc-dhcp-server
-
-
-DHCP radvd IPv6
-~~~~~~~~~~~~~~~
 
 Es wird für IPv6 die Konfigurationsdatei :code:`/etc/radvd.conf` mit folgenden
 Zeilen benötigt:
@@ -564,10 +579,6 @@ Jetzt kann radvd als :code:`root` auf der Konsole gestartet werden:
 ::
 
    service radvd restart
-
-
-DHCP isc-dhcp-server IPv4 und IPv6
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Die Konfigurationsdatei :code:`/etc/dhcp/dhcpd.conf` wird für IPv4 mit folgenden
 Zeilen benötigt:
@@ -644,7 +655,7 @@ War das erfolgreich, so kann der DHCP-Server als root gestartet werden:
 
 
 DNS-Server (BIND)
------------------
+~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -776,7 +787,7 @@ Zum Schluss starten wir bind neu.
 
 
 Mesh Announce
--------------
+~~~~~~~~~~~~~
 
 Um als Gateway, Server oder alles was kein Freifunk Router ist auf der
 Karte zu erscheinen kann
@@ -865,7 +876,7 @@ Dann den Service aktivieren
 Das System sollte in kürze auf der Karte auftauchen.
 
 Für VPN: Regelmäßig testen
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Wenn möglich, dann ist es sinnvoll den VPN-Ausgang regelmäßig zu testen.
 Wenn du auf dem Interface einen Ping an google senden kannst dann eignet sich dieses Skript:
