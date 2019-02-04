@@ -10,16 +10,17 @@ In diesem Kapitel konfigurieren wir das Gateway dabei gehen wir Schritt für Sch
 Wenn du ein neues Gateway einrichten willst solltest du dir als erstes ein freies aus der Tabelle :ref:`infrastruktur-gateways` aussuchen.
 Wenn du keines der bereits definierten Gateways benutzen möchtest dann brauchst du folgende Daten:
 
-=========== ======= ==========
-Datum       Kürzel  Kommentar
------------ ------- ----------
-fastd-MAC   $MACf   Die MAC-Adresse für den Fastd Tunnel
-batman-MAC  $MACb   Die MAC-Adresse für das Batman Inteface
-IPv4        $IPv4   Feste IPv4 für Freifunk
-IPv6        $IPv6   Feste IPV6 für Freifunk
-Public-IPv4 $IPv4P  Öffentliche feste IPv4 deines Gateways
-Public-IPv6 $IPv6P  Öffentliche feste IPv6 deines Gateways
-=========== ======= ==========
+============ ======= ==========
+Datum        Kürzel  Kommentar
+------------ ------- ----------
+fastd-MAC    $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC   $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4         $IPv4   Feste IPv4 für Freifunk
+IPv6         $IPv6   Feste IPV6 für Freifunk
+Gateway-Name $gwName Name deines Gateways
+Public-IPv4  $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6  $IPv6P  Öffentliche feste IPv6 deines Gateways
+============ ======= ==========
 
 Zu der :code:`$IPv4` und :code:`$IPv6` gehören natürlich noch jeweils das Passende Netzwerk, welches an die Clients verteilt wird. Wähle also passende Subnetze aus und dazu gehörende Adressen für dein Gateway.
 
@@ -37,87 +38,18 @@ Zum Einstieg installieren wir einige Pakete die wir später brauchen werden.
 
    sudo apt install build-essential git apt-transport-https bridge-utils ntp net-tools
 
-VPN oder Direkt
----------------
-
-Spätestens jetzt solltest du dich entschieden haben ob du einen VPN-Anbieter verwenden möchtest oder nicht.
-Die Meisten Anbieter werden eine Anleitung für Debian haben, wenn nicht solltest du vielleicht einen anderen wählen.
-
-Für die Freifunk-Installation interessiert uns am Ende der Name des Interfaces.
-
-Wenn du direkt ausleiten möchtest dann brauchen wir den Namen deines "Internet-Interfaces".
-
-Egal für welche Variante du dich entscheidest wir merken uns den Interface Namen. Zu der Tabelle am Anfang kommt also ein neuer Eintrag.
-
-============== ======= ==========
-Datum          Kürzel  Kommentar
--------------- ------- ----------
-fastd-MAC      $MACf   Die MAC-Adresse für den Fastd Tunnel
-batman-MAC     $MACb   Die MAC-Adresse für das Batman Inteface
-IPv4           $IPv4   Feste IPv4 für Freifunk
-IPv6           $IPv6   Feste IPV6 für Freifunk
-Public-IPv4    $IPv4P  Öffentliche feste IPv4 deines Gateways
-Public-IPv6    $IPv6P  Öffentliche feste IPv6 deines Gateways
-Exit-Interface $Exit   Das Exit Interface z.b. tun0 oder eth1
-============== ======= ==========
-
-
-Für VPN: Regelmäßig testen
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Wenn möglich, dann ist es sinnvoll den VPN-Ausgang regelmäßig zu testen.
-Wenn du auf dem Interface einen Ping an google senden kannst dann eignet sich dieses Skript:
-
-:code:`/root/check-vpn.sh`
-
 ::
 
-   #!/bin/bash
+   adduser ffsh
 
-   # Test gateway is connected to VPN
-   test=$(ping -q -I $Exit 8.8.8.8 -c 4 -i 1 -W 5 | grep 100 )
-
-   if [ "$test" != "" ]
-       then
-       echo "VPN nicht da - Neustart!"
-       sytemctl restart openvpn       # Fehler - VPN nicht da - Neustart
-   else
-       echo "alles gut"
-   fi
-
-Ersetze hier :code:`$Exit` durch das VPN-Interface
-
-Dann noch das Script ausführbar machen:
-
-::
-
-   chmod u+x /root/check-vpn.sh
-
-
-Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
-und damit regelmäßig der VPN-Status geprüft wird.
-
-::
-
-   # Check VPN via openvpn is running, if not service restart
-   */10 * * * * root /root/check-vpn.sh > /dev/null
-
-Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
-
-::
-
-   systemctl restart cron
-
-Wenn du alles richtig gemacht hast und dein Exit-Interface funktioniert dann gehen wir über zum nächsten Schritt.
-
-Batman und Fastd
-----------------
+Batman
+------
 
 Freifunk Südholstein Benutzt für das Mesh-Netzwerk batman-adv und den Routing-Algorithmus Batman IV. Für die VPN-Tunnel zu den Knoten benutzen wir Fastd.
 Da das Batman-Kernel-Modul nicht in einer aktuellen Version im OS-Repository ist, müssen wir es selber bauen.
 
-Batman Kernel-Modul und batctl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+batman-adv und batctl
+~~~~~~~~~~~~~~~~~~~~~
 
 Für Batman gibt es ein Kernel-Modul und ein Kontroll-Programm. Als erstes installieren wir aber ein paar Pakete die wir benötigen.
 
@@ -184,18 +116,36 @@ Hier könntest du einmal einen Reboot machen. Wenn alles geklappt hat, kannst du
 
 Wenn du hier eine andere Ausgabe bekommst, wendest du dich am besten an das NOC.
 
-fastd
------
+Routing
+-------
 
-fastd v18 ist in Debian 9 bereits in den Repositories enthalten. Unter
-Debian 8 findet man es in den jessie-backports.
+Spätestens jetzt solltest du dich entschieden haben ob du einen VPN-Anbieter verwenden möchtest oder nicht.
+Die Meisten Anbieter werden eine Anleitung für Debian haben, wenn nicht solltest du vielleicht einen anderen wählen.
+
+Wenn du einen VPN-Exit erstellen möchtest, dann solltest du auch noch herrausfinden wie du bei "on up" und "on down" jeweils ein Skript ausführen kannst.
+
+Wir erweitern die Tabelle um zwei Einträge 1: Das Internet-Interface deines Servers. 2: Das Exit-Interface, wenn du ein VPN-Exit erstellst, dann ist dies dein VPN-Interface. Wenn du allerdings ein RAW-Exit machst, dann trägst du hier auch das Internet-Interface ein.
+
+================== ======= ==========
+Datum              Kürzel  Kommentar
+------------------ ------- ----------
+fastd-MAC          $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC         $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4               $IPv4   Feste IPv4 für Freifunk
+IPv6               $IPv6   Feste IPV6 für Freifunk
+Gateway-Name       $gwName Name deines Gateways
+Public-IPv4        $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6        $IPv6P  Öffentliche feste IPv6 deines Gateways
+Internet-Interface $InetI  Das Internet-Interface deines Servers
+Exit-Interface     $ExitI  Das Exit-Interface
+================== ======= ==========
+
+fastd
+~~~~~
 
 ::
 
    apt install fastd
-
-fastd-Konfiguration
-~~~~~~~~~~~~~~~~~~~
 
 Wir brauchen für den neuen Server die Schlüssel für fastd. Diese sind in
 Südholstein für 12 Gateways bereits in der Firmware eingetragen und den
@@ -214,19 +164,21 @@ Die Schlüssel sicher Verwahren. Der public Key muss später in der Firmware ein
 
 Jetzt konfigurieren wir Fastd bevor es weiter geht noch einmal die Tabelle.
 
-============== ======= ==========
-Datum          Kürzel  Kommentar
--------------- ------- ----------
-fastd-MAC      $MACf   Die MAC-Adresse für den Fastd Tunnel
-batman-MAC     $MACb   Die MAC-Adresse für das Batman Inteface
-IPv4           $IPv4   Feste IPv4 für Freifunk
-IPv6           $IPv6   Feste IPV6 für Freifunk
-Public-IPv4    $IPv4P  Öffentliche feste IPv4 deines Gateways
-Public-IPv6    $IPv6P  Öffentliche feste IPv6 deines Gateways
-Exit-Interface $Exit   Das Exit Interface z.b. tun0 oder eth1
-Fastd-Private  $FastdP Fastd Private Key
-Fastd-Public   $Fastd  Fastd Public Key
-============== ======= ==========
+================== ======= ==========
+Datum              Kürzel  Kommentar
+------------------ ------- ----------
+fastd-MAC          $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC         $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4               $IPv4   Feste IPv4 für Freifunk
+IPv6               $IPv6   Feste IPV6 für Freifunk
+Gateway-Name       $gwName Name deines Gateways
+Public-IPv4        $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6        $IPv6P  Öffentliche feste IPv6 deines Gateways
+Internet-Interface $InetI  Das Internet-Interface deines Servers
+Exit-Interface     $ExitI  Das Exit-Interface
+Fastd-Private      $FastdP Fastd Private Key
+Fastd-Public       $Fastd  Fastd Public Key
+================== ======= ==========
 
 Als erstes erzeugen wir ein neues Verzeichnis, in dem später die Konfiguration abgelegt wird.
 
@@ -234,13 +186,7 @@ Als erstes erzeugen wir ein neues Verzeichnis, in dem später die Konfiguration 
 
    mkdir /etc/fastd/ffsh/
 
-Außerdem benötigen wir einen Nutzer ohne root-Rechte, unter dem fastd laufen kann.
 
-::
-
-   adduser --disabled-login --no-create-home ffsh
-
-Die darauf folgenden Fragen nach Namen, Orten und Firmenzugehörigkeit können alle leer gelassen werden.
 
 In diesem Verzeichnis legen wir eine Konfigurationsdatei für fastd an.
 Die Konfigurationsdatei :code:`/etc/fastd/ffsh/fastd.conf` soll diese Zeilen
@@ -250,7 +196,7 @@ enthalten:
 
 
    # Lausche auf jeder IP an Port 10000 auf dem Interface $Exit
-   bind any:10000 interface "$Exit";
+   bind any:10000 interface "$InetI";
 
    # Fastd soll unter dem Benutzer ffsh laufen
    user "ffsh";
@@ -285,46 +231,31 @@ enthalten:
 
    # Hier sind einige Befehle die ein paar Wichtige dinge machen
    on up "
-    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen.
+    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen. ($INTERFACE nicht ersetzen)
     ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
-    ifup bat0                                # Batman-Interface aktiv stellen
-    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
-    sh /etc/fastd/ffsh/routing.sh            # Firewall und Routing aktivieren
-    # sh /etc/fastd/ffsh/filtering.sh        # Optional Filterregeln später mehr dazu
-   ";
-
-   # Hier wird alles rückgängig gemacht.
-   on down "
-    ifdown bat0
-    ifdown br-ffsh
-    sh /etc/fastd/ffsh/DROP-routing.sh
-    # sh /etc/fastd/ffsh/DROP-filtering.sh
    ";
 
 Datei speichern und fertig. Hier die neue Tabelle:
 
-=============== ======= ==========
-Datum           Kürzel  Kommentar
---------------- ------- ----------
-fastd-MAC       $MACf   Die MAC-Adresse für den Fastd Tunnel
-batman-MAC      $MACb   Die MAC-Adresse für das Batman Inteface
-IPv4            $IPv4   Feste IPv4 für Freifunk
-IPv6            $IPv6   Feste IPV6 für Freifunk
-Public-IPv4     $IPv4P  Öffentliche feste IPv4 deines Gateways
-Public-IPv6     $IPv6P  Öffentliche feste IPv6 deines Gateways
-Exit-Interface  $Exit   Das Exit Interface z.b. tun0 oder eth1
-Fastd-Private   $FastdP Fastd Private Key
-Fastd-Public    $Fastd  Fastd Public Key
-Fastd-Interface $FastdI Fastd Interface
-=============== ======= ==========
+================== ======= ==========
+Datum              Kürzel  Kommentar
+------------------ ------- ----------
+fastd-MAC          $MACf   Die MAC-Adresse für den Fastd Tunnel
+batman-MAC         $MACb   Die MAC-Adresse für das Batman Inteface
+IPv4               $IPv4   Feste IPv4 für Freifunk
+IPv6               $IPv6   Feste IPV6 für Freifunk
+Gateway-Name       $gwName Name deines Gateways
+Public-IPv4        $IPv4P  Öffentliche feste IPv4 deines Gateways
+Public-IPv6        $IPv6P  Öffentliche feste IPv6 deines Gateways
+Internet-Interface $InetI  Das Internet-Interface deines Servers
+Exit-Interface     $ExitI  Das Exit-Interface
+Fastd-Private      $FastdP Fastd Private Key
+Fastd-Public       $Fastd  Fastd Public Key
+Fastd-Interface    $FastdI Fastd Interface
+================== ======= ==========
 
-Netzwerk Konfiguration
-----------------------
 
-Im Folgenden werden wir das Routing und die Netzwerkschnittstellen auf dem Gateway einrichten.
-Du solltest die IP-Adressen deines Gateways bereit halten.
-
-IP Forwarding
+IP-Forwarding
 ~~~~~~~~~~~~~
 
 Als erstes richten wir IP-Forwarding ein, damit IP-Pakete an andere Geräte weitergeleitet werden.
@@ -343,8 +274,8 @@ Danach die Systemweiten Konfigurationsdateien neu laden, damit die Änderung wir
 
    sysctl --system
 
-Interfaces Konfigurieren
-~~~~~~~~~~~~~~~~~~~~~~~~
+Interfaces
+~~~~~~~~~~
 
 Als nächstes werden die Netzwerkschnittstellen :code:`bat0` und :code:`br-ffsh` eingerichtet.
 
@@ -363,12 +294,12 @@ dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwer
 
    allow-hotplug br-ffsh
    iface br-ffsh inet static
-       address 10.144.[GW Netz].1 # Deine Gateway IPv4-Adresse
+       address $IPv4 # Deine Gateway IPv4-Adresse
        netmask 255.255.0.0
        bridge_ports none
 
    iface br-ffsh inet6 static
-       address fddf:0bf7:80::[GW Netz]:1 # Deine Gateway IPv6-Adresse
+       address $IPv6 # Deine Gateway IPv6-Adresse
        netmask 64
    #
    # Batman Interface
@@ -377,28 +308,31 @@ dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwer
 
    allow-hotplug bat0
    iface bat0 inet6 manual
-       pre-up batctl if add ffsh-mesh
+       pre-up batctl if add ffsh-mesh TODO
        post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
 
        post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
-       post-up batctl gw server 100mbit/100mbit
+       post-up batctl gw server 100mbit/100mbit TODO
 
        pre-down brctl delif br-ffsh bat0 || true
 
-Die :code:`/etc/hosts` mit Folgenden Zeilen befüllen:
+FQDN, Hosts
+~~~~~~~~~~~
+
+Achtung! Vermutlich enthält deine :code:`/etc/hosts bereits Einträge für diene öffentlichen Adressen, füge dort nur den FQDN und deinen Gateway-Namen hinzu.
 
 ::
 
 
    127.0.0.1                  localhost
-   [externe IP]               [GW Name].freifunk-suedholstein.de   [GW Name]
-   10.144.[GW Netz].1         ffsh
-   fddf:0bf7:80::[GW Netz]:1  ffsh
+   $IPv4P                     $gwName.freifunk-suedholstein.de $gwName
+   $IPv6P                     $gwName.freifunk-suedholstein.de $gwName
+   $IPv4                      $gwName.freifunk-suedholstein.de $gwName
+   $IPv6                      $gwName.freifunk-suedholstein.de $gwName
 
-
-IP Tables
-~~~~~~~~~
+IPTables
+~~~~~~~~
 
 Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
 
@@ -433,8 +367,16 @@ Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
    #!/bin/sh
    /sbin/iptables-restore < /etc/iptables.up.rules
 
+IPTables: Routing
+~~~~~~~~~~~~~~~~~
 
 Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden in :code:`/etc/fastd/ffsh/routing.sh` gespeichert.
+
+
+    ifup bat0                                # Batman-Interface aktiv stellen
+    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
+    sh /etc/fastd/ffsh/routing.sh            # Firewall und Routing aktivieren
+    # sh /etc/fastd/ffsh/filtering.sh        # Optional Filterregeln später mehr dazu
 
 ::
 
@@ -445,16 +387,16 @@ Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden
    #
 
    # Route zurück ins Freifunk Netzwerk
-   /sbin/ip route add table 42 10.144.0.0/16 dev br-ffsh src 10.144.[$GW].1
+   /sbin/ip route add table ffsh 10.144.0.0/16 dev br-ffsh src $IPv4
    # Route nach link-local
-   /sbin/ip route add table 42 128/1 dev tun0
+   /sbin/ip route add table ffsh 128/1 dev $ExitI
    # Route für den Rest, Internet und so
-   /sbin/ip route add table 42 0/1 dev tun0
+   /sbin/ip route add table ffsh 0/1 dev $ExitI
 
-   # Alle Pakete von interface "br-ffsh" über Tabelle 42
-   /sbin/ip rule add table 42 iif br-ffsh
-   # Alle Pakete mit der Markierung 0x1 über Tabelle 42
-   /sbin/ip rule add table 42 from all fwmark 0x1
+   # Alle Pakete von interface "br-ffsh" über Tabelle ffsh
+   /sbin/ip rule add table ffsh iif br-ffsh TODO
+   # Alle Pakete mit der Markierung 0x1 über Tabelle ffsh
+   /sbin/ip rule add table ffsh from all fwmark 0x1
 
    #
    # Firewall Rules
@@ -582,7 +524,11 @@ Zum Schluss laden wir die Default-Policys:
 
    iptables-restore < /etc/iptables.up.rules
 
-Die anderen Regeln werden über fastd gestartet.
+
+
+
+
+
 
 
 DHCP
@@ -923,3 +869,51 @@ Dann den Service aktivieren
 
 
 Das System sollte in kürze auf der Karte auftauchen.
+
+Für VPN: Regelmäßig testen
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wenn möglich, dann ist es sinnvoll den VPN-Ausgang regelmäßig zu testen.
+Wenn du auf dem Interface einen Ping an google senden kannst dann eignet sich dieses Skript:
+
+:code:`/root/check-vpn.sh`
+
+::
+
+   #!/bin/bash
+
+   # Test gateway is connected to VPN
+   test=$(ping -q -I $Exit 8.8.8.8 -c 4 -i 1 -W 5 | grep 100 )
+
+   if [ "$test" != "" ]
+       then
+       echo "VPN nicht da - Neustart!"
+       sytemctl restart openvpn       # Fehler - VPN nicht da - Neustart
+   else
+       echo "alles gut"
+   fi
+
+Ersetze hier :code:`$Exit` durch das VPN-Interface
+
+Dann noch das Script ausführbar machen:
+
+::
+
+   chmod u+x /root/check-vpn.sh
+
+
+Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
+und damit regelmäßig der VPN-Status geprüft wird.
+
+::
+
+   # Check VPN via openvpn is running, if not service restart
+   */10 * * * * root /root/check-vpn.sh > /dev/null
+
+Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
+
+::
+
+   systemctl restart cron
+
+Wenn du alles richtig gemacht hast und dein Exit-Interface funktioniert dann gehen wir über zum nächsten Schritt.
