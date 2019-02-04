@@ -233,7 +233,19 @@ enthalten:
    on up "
     ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen. ($INTERFACE nicht ersetzen)
     ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
+    ifup bat0                                # Batman-Interface aktiv stellen
+    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
+    sh /etc/fastd/ffsh/routing.sh       # Firewall und Routing aktivieren
    ";
+
+   on down "
+    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen. ($INTERFACE nicht ersetzen)
+    ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
+    ifup bat0                                # Batman-Interface aktiv stellen
+    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
+    sh /etc/fastd/ffsh/DROP-routing.sh       # Firewall und Routing aktivieren
+   ";
+
 
 Datei speichern und fertig. Hier die neue Tabelle:
 
@@ -308,12 +320,12 @@ dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwer
 
    allow-hotplug bat0
    iface bat0 inet6 manual
-       pre-up batctl if add ffsh-mesh TODO
+       pre-up batctl if add ffsh-mesh
        post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
 
        post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
-       post-up batctl gw server 100mbit/100mbit TODO
+       post-up batctl gw server 100mbit/100mbit
 
        pre-down brctl delif br-ffsh bat0 || true
 
@@ -372,12 +384,6 @@ IPTables: Routing
 
 Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden in :code:`/etc/fastd/ffsh/routing.sh` gespeichert.
 
-
-    ifup bat0                                # Batman-Interface aktiv stellen
-    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
-    sh /etc/fastd/ffsh/routing.sh            # Firewall und Routing aktivieren
-    # sh /etc/fastd/ffsh/filtering.sh        # Optional Filterregeln später mehr dazu
-
 ::
 
    #!/bin/sh
@@ -388,10 +394,10 @@ Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden
 
    # Route zurück ins Freifunk Netzwerk
    /sbin/ip route add table ffsh 10.144.0.0/16 dev br-ffsh src $IPv4
-   # Route nach link-local
-   /sbin/ip route add table ffsh 128/1 dev $ExitI
-   # Route für den Rest, Internet und so
-   /sbin/ip route add table ffsh 0/1 dev $ExitI
+
+   # Temporäre blockaden
+   /sbin/ip route add table ffsh 128/1 reject
+   /sbin/ip route add table ffsh 0/1 reject
 
    # Alle Pakete von interface "br-ffsh" über Tabelle ffsh
    /sbin/ip rule add table ffsh iif br-ffsh TODO
@@ -409,17 +415,28 @@ Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden
    # NAT
    /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
 
+IPTables: Exit
+~~~~~~~~~~~~~~
+
 Besonders bei direkter Ausleitung des Traffics ist es wichtig IP-Bereiche, die im Internet nicht gerouted werden können, zu filtern. Auf Gateways mit VPN Tunnel tut es aber nicht weh, hier ist das exit-interface der VPN-Tunnel.
 
-:code:`/etc/fastd/ffsh/filtering.sh`
+:code:`/home/ffsh/exit.sh`
 
 ::
 
    #!/bin/sh
 
    #
-   # Filter
+   # Routing
    #
+
+   /sbin/ip route replace table ffsh 128/1 dev $ExitI
+   /sbin/ip route replace table ffsh 0/1 dev $ExitI
+
+   #
+   # Optional: Filter
+   #
+
    /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 169.254.0.0/16 -j DROP
    /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 172.16.0.0/12 -j DROP
    /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 127.0.0.0/8 -j DROP
@@ -437,39 +454,16 @@ Besonders bei direkter Ausleitung des Traffics ist es wichtig IP-Bereiche, die i
    /sbin/iptables -A FORWARD -p tcp --dport 68 -j DROP
    /sbin/ip6tables -A FORWARD -p tcp --dport 546 -j DROP
 
-
-Um die Regeln beim stoppen oder neustarten von fastd zu entfernen legen wir weitere Skripte an:
-
-Für das Routing :code:`/etc/fastd/ffsh/routing-DROP.sh`.
+Und für die Filter :code:`/home/ffsh/DROP-exit.sh`
 
 ::
 
-
-   #!/bin/sh
-
    #
-   # DROP Routing-Table
+   # Routing
    #
 
-   /sbin/ip route del table 42 10.144.0.0/16 dev br-ffsh src 10.144.[$GW].1
-   /sbin/ip route del table 42 128/1 dev tun0
-   /sbin/ip route del table 42 0/1 dev tun0
-
-   /sbin/ip rule del table 42 iif br-ffsh
-   /sbin/ip rule del table 42 from all fwmark 0x1
-
-   #
-   # DROP Firewall-Rules
-   #
-
-   /sbin/iptables -t mangle -D PREROUTING -s 10.144.0.0/16 -j MARK --set-mark 0x1
-   /sbin/iptables -t mangle -D OUTPUT -s 10.144.0.0/16 -j MARK --set-mark 0x1
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
-
-Und für die Filter :code:`/etc/fastd/ffsh/filtering-DROP.sh`
-
-::
-
+   /sbin/ip route replace table ffsh 128/1 dev $ExitI
+   /sbin/ip route replace table ffsh 0/1 dev $ExitI
 
    #!/bin/sh
 
