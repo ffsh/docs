@@ -156,6 +156,10 @@ Wenn du hier eine andere Ausgabe bekommst, wendest du dich am besten an das NOC.
 fastd
 -----
 
+fastd ist die VPN-Software mit der wir die Gateways untereinander und mit den Knoten verbinden. Es handelt sich dabei um einen Layer2 Tunnel. fastd zeichnet sich durch eine relativ hohe effiziens aus und kann daher auch auf den relativ schwachen Knoten laufen. Allerdings belastet die Verschlüsselung der Tunnel nicht nur die Gateways sondern auch die Knoten. Ein Nachteil von fastd sind die häufigen Kontext wechsel zwischen Kernel- und Userland.
+
+Wir beginnen mit der Installation, die aktuelle version ist in den Debian-Paketen enthalten.
+
 ::
 
    apt install fastd
@@ -348,7 +352,7 @@ dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwer
 FQDN, Hosts
 ~~~~~~~~~~~
 
-Achtung! Vermutlich enthält deine :code:`/etc/hosts bereits Einträge für diene öffentlichen Adressen, füge dort nur den FQDN und deinen Gateway-Namen hinzu.
+Achtung! Vermutlich enthält deine :code:`/etc/hosts` bereits Einträge für diene öffentlichen Adressen, füge dort nur den FQDN und deinen Gateway-Namen hinzu.
 
 ::
 
