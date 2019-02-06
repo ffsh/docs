@@ -251,7 +251,7 @@ enthalten:
 
    # Hier sind einige Befehle die ein paar Wichtige dinge machen
    on up "
-    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen. ($INTERFACE nicht ersetzen)
+    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen.
     ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
     ifup bat0                                # Batman-Interface aktiv stellen
     ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
@@ -259,13 +259,13 @@ enthalten:
    ";
 
    on down "
-    ip link set dev $INTERFACE address $MACf # MAC für fastd-Interface festlegen. ($INTERFACE nicht ersetzen)
-    ip link set dev $INTERFACE up            # Interface auf aktiv stellen.
-    ifup bat0                                # Batman-Interface aktiv stellen
-    ifup br-ffsh                             # Freifunk-Brücke aktiv stellen
-    sh /etc/fastd/ffsh/DROP-routing.sh       # Firewall und Routing aktivieren
+    ip link set dev $INTERFACE down            # Interface auf inaktiv stellen.
+    ifdown bat0                                # Batman-Interface inaktiv stellen
+    ifdown br-ffsh                             # Freifunk-Brücke inaktiv stellen
+    sh /etc/fastd/ffsh/DROP-routing.sh         # Firewall und Routing deaktivieren
    ";
 
+Ersetze hier: :code:`$InetI, $FastdP, $MACf`.
 
 Datei speichern und fertig. Hier die neue Tabelle:
 
@@ -326,13 +326,14 @@ dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwer
 
    allow-hotplug br-ffsh
    iface br-ffsh inet static
-       address $IPv4 # Deine Gateway IPv4-Adresse
-       netmask 255.255.0.0
+       address $IPv4
+       netmask 16
        bridge_ports none
 
    iface br-ffsh inet6 static
-       address $IPv6 # Deine Gateway IPv6-Adresse
+       address $IPv6
        netmask 64
+
    #
    # Batman Interface
    # Erstellt das virtuelle Inteface für das Batman-Modul und bindet dieses an die Netzwerkbrücke
@@ -341,13 +342,15 @@ dabei musst du ein paar Stellen anpassen. Die Adressen für das Freifunk-Netzwer
    allow-hotplug bat0
    iface bat0 inet6 manual
        pre-up batctl if add ffsh-mesh
-       post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
+       post-up ip link set address $MACb dev bat0
 
        post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
        post-up batctl gw server 100mbit/100mbit
 
        pre-down brctl delif br-ffsh bat0 || true
+
+Ersetze hier: :code:`$IPv4, $IPv6, $MACb`.
 
 FQDN, Hosts
 ~~~~~~~~~~~
@@ -363,7 +366,7 @@ Achtung! Vermutlich enthält deine :code:`/etc/hosts` bereits Einträge für die
    $IPv4                      $gwName.freifunk-suedholstein.de $gwName
    $IPv6                      $gwName.freifunk-suedholstein.de $gwName
 
-IPTables: Defaults
+iptables: Defaults
 ~~~~~~~~~~~~~~~~~~
 
 Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
@@ -410,6 +413,7 @@ Routing: fastd
 ~~~~~~~~~~~~~~
 
 Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden in :code:`/etc/fastd/ffsh/routing.sh` gespeichert.
+Dieses Skript wird durch fastd gestartet.
 
 ::
 
@@ -427,7 +431,7 @@ Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden
    /sbin/ip route add table ffsh 0/1 reject
 
    # Alle Pakete von interface "br-ffsh" über Tabelle ffsh
-   /sbin/ip rule add table ffsh iif br-ffsh TODO
+   /sbin/ip rule add table ffsh iif br-ffsh
    # Alle Pakete mit der Markierung 0x1 über Tabelle ffsh
    /sbin/ip rule add table ffsh from all fwmark 0x1
 
@@ -442,20 +446,57 @@ Für das Routing brauchen wir ein paar Routing- und Firewall-Regeln diese werden
    # NAT
    /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
 
+Ersetze hier: :code:`$IPv4`.
+
+Um die Regeln beim stoppen von fastd rückgängig zu machen legen wir eine zweite Datei an. :code:`/etc/fastd/ffsh/DROP-routing.sh`
+
 ::
 
-   /etc/fastd/ffsh/routing.sh        # Skript für das Routing
-   /etc/fastd/ffsh/routing-DROP.sh   # Skript zum entfernen der Routing-Regeln
+   #!/bin/sh
+
+   #
+   # DROP Routing table
+   #
+
+   # Route zurück ins Freifunk Netzwerk
+   /sbin/ip route del table ffsh 10.144.0.0/16 dev br-ffsh src $IPv4
+
+   # Temporäre blockaden
+   /sbin/ip route del table ffsh 128/1 reject
+   /sbin/ip route del table ffsh 0/1 reject
+
+   # Alle Pakete von interface "br-ffsh" über Tabelle ffsh
+   /sbin/ip rule del table ffsh iif br-ffsh
+   # Alle Pakete mit der Markierung 0x1 über Tabelle ffsh
+   /sbin/ip rule del table ffsh from all fwmark 0x1
+
+   #
+   # DROP Firewall Rules
+   #
+
+   # Alle Pakete aus Freifunk mit 0x1 markieren
+   /sbin/iptables -t mangle -D PREROUTING -s 10.144.0.0/16 -j MARK --set-mark 0x1
+   # Traffic vom Gateway Richtung Freifunk markieren mit 0x1
+   /sbin/iptables -t mangle -D OUTPUT -s 10.144.0.0/16 -j MARK --set-mark 0x1
+   # NAT
+   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
+
+Ersetze hier: :code:`$IPv4`.
+
+Jetzt machen wir die beiden Dateien ausführbar.
 
 ::
 
    chmod 700 /etc/fastd/ffsh/routing.sh
    chmod 700 /etc/fastd/ffsh/routing-DROP.sh
 
+
 Routing: Exit
 ~~~~~~~~~~~~~
 
-Besonders bei direkter Ausleitung des Traffics ist es wichtig IP-Bereiche, die im Internet nicht gerouted werden können, zu filtern. Auf Gateways mit VPN Tunnel tut es aber nicht weh, hier ist das exit-interface der VPN-Tunnel.
+Die Regeln aus dem vorherigen Abschnitt ermöglicht noch keinen Weg ins Internet. Wir hinterlegen die Regeln hierfür in einem zweiten Skript, um eine möglichst hohe Modularität zu erreichen.
+
+Das folgende Skript soll die Regeln, welche durch fastd gesetzt wurden durch Routen ins Internet ersetzen. Außerdem werden einige Filterregeln installiert. Diese Verhindern das scannen von nicht im Internet vorhanden Adressen und verhindern insbesondere bei einem RAW-Exit Ärger mit dem Provider.
 
 :code:`/home/ffsh/exit.sh`
 
@@ -474,24 +515,27 @@ Besonders bei direkter Ausleitung des Traffics ist es wichtig IP-Bereiche, die i
    # Optional: Filter
    #
 
-   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 169.254.0.0/16 -j DROP
-   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 172.16.0.0/12 -j DROP
-   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 127.0.0.0/8 -j DROP
-   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
-   /sbin/iptables -A OUTPUT -o [EXIT-Interface] -d 192.168.0.0/16 -j DROP
+   /sbin/iptables -A OUTPUT -o $ExitI -d 169.254.0.0/16 -j DROP
+   /sbin/iptables -A OUTPUT -o $ExitI -d 172.16.0.0/12 -j DROP
+   /sbin/iptables -A OUTPUT -o $ExitI -d 127.0.0.0/8 -j DROP
+   /sbin/iptables -A OUTPUT -o $ExitI -d 10.0.0.0/8 -j DROP
+   /sbin/iptables -A OUTPUT -o $ExitI -d 192.168.0.0/16 -j DROP
 
    /sbin/iptables -A FORWARD -d 169.254.0.0/16 -j DROP
    /sbin/iptables -A FORWARD -d 172.16.0.0/12 -j DROP
    /sbin/iptables -A FORWARD -d 127.0.0.0/8 -j DROP
    /sbin/iptables -A FORWARD -d 192.168.0.0/16 -j DROP
 
-   /sbin/iptables -A FORWARD -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
+   /sbin/iptables -A FORWARD -o $ExitI -d 10.0.0.0/8 -j DROP
 
    /sbin/ip6tables -A FORWARD -p tcp --dport 7 -j DROP
    /sbin/iptables -A FORWARD -p tcp --dport 68 -j DROP
    /sbin/ip6tables -A FORWARD -p tcp --dport 546 -j DROP
 
-Und für die Filter :code:`/home/ffsh/DROP-exit.sh`
+Ersetze hier :code:`$ExitI`.
+
+
+Auch für dieses Skript legen wir Regeln zum rückgängig machen fest. :code:`/home/ffsh/DROP-exit.sh`
 
 ::
 
@@ -508,28 +552,25 @@ Und für die Filter :code:`/home/ffsh/DROP-exit.sh`
    # DROP Filter
    #
 
-   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 169.254.0.0/16 -j DROP
-   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 172.16.0.0/12 -j DROP
-   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 127.0.0.0/8 -j DROP
-   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
-   /sbin/iptables -D OUTPUT -o [EXIT-Interface] -d 192.168.0.0/16 -j DROP
+   /sbin/iptables -D OUTPUT -o $ExitI -d 169.254.0.0/16 -j DROP
+   /sbin/iptables -D OUTPUT -o $ExitI -d 172.16.0.0/12 -j DROP
+   /sbin/iptables -D OUTPUT -o $ExitI -d 127.0.0.0/8 -j DROP
+   /sbin/iptables -D OUTPUT -o $ExitI -d 10.0.0.0/8 -j DROP
+   /sbin/iptables -D OUTPUT -o $ExitI -d 192.168.0.0/16 -j DROP
 
    /sbin/iptables -D FORWARD -d 169.254.0.0/16 -j DROP
    /sbin/iptables -D FORWARD -d 172.16.0.0/12 -j DROP
    /sbin/iptables -D FORWARD -d 127.0.0.0/8 -j DROP
    /sbin/iptables -D FORWARD -d 192.168.0.0/16 -j DROP
 
-   /sbin/iptables -D FORWARD -o [EXIT-Interface] -d 10.0.0.0/8 -j DROP
+   /sbin/iptables -D FORWARD -o $ExitI -d 10.0.0.0/8 -j DROP
 
    /sbin/ip6tables -D FORWARD -p tcp --dport 7 -j DROP
    /sbin/iptables -D FORWARD -p tcp --dport 68 -j DROP
    /sbin/ip6tables -D FORWARD -p tcp --dport 546 -j DROP
 
+Ersetze hier :code:`$ExitI`.
 
-::
-
-   /etc/fastd/ffsh/filtering.sh      # Skript für filtern privater IP-Räume etc.
-   /etc/fastd/ffsh/filtering-DROP.sh # Skript zum entfernen der Filter-Regeln
 
 Die Skripte machen wir nun ausführbar:
 
@@ -539,21 +580,19 @@ Die Skripte machen wir nun ausführbar:
    chmod 700 /home/ffsh/DROP-exit.sh
 
 
-
-
-
-
 Dienste
 -------
 
+Im folgenden werden einige essentielle Dienste eingerichtet.
 
+radvd
+~~~~~
 
-DHCP & radvd
-~~~~~~~~~~~~
+TODO
 
 ::
 
-   apt install radvd isc-dhcp-server
+   apt install radvd
 
 Es wird für IPv6 die Konfigurationsdatei :code:`/etc/radvd.conf` mit folgenden
 Zeilen benötigt:
@@ -573,16 +612,26 @@ Zeilen benötigt:
            AdvRouterAddr on;
        };
 
-       RDNSS fddf:0bf7:80::[GW Netz]:1 {
+       RDNSS $IPv6 {
        };
    };
 
+Ersetze hier :code:`IPv6`.
 
-Jetzt kann radvd als :code:`root` auf der Konsole gestartet werden:
+Zum Abchluss starten wir radvd neu.
 
 ::
 
-   service radvd restart
+   systemctl restart radvd
+
+dhcp
+~~~~
+TODO
+
+::
+
+   apt install isc-dhcp-server
+
 
 Die Konfigurationsdatei :code:`/etc/dhcp/dhcpd.conf` wird für IPv4 mit folgenden
 Zeilen benötigt:
@@ -602,15 +651,14 @@ Zeilen benötigt:
        authoritative;
        range 10.144.[GW Netz].2 10.144.[GW Netz + 15].254;
 
-       option routers 10.144.[GW Netz].1;
+       option routers $IPv4;
 
-       option domain-name-servers 10.144.[GW Netz].1; # für die eigenen DNS-Einträge
-       # option domain-name-servers 85.214.20.141; # weitere anonyme DNS
-       # option domain-name-servers 213.73.91.35;
+       option domain-name-servers $IPv4;
    }
 
    include "/etc/dhcp/static.conf";
 
+Ersetze hier :code:`$IPv4`
 
 Bitte eine leere Datei :code:`/etc/dhcp/static.conf` erzeugen.
 
@@ -745,7 +793,7 @@ Dann in der Datei :code:`/etc/bind/named.conf.local` folgendes am Ende ergänzen
 
 
 Die zugehörigen Zone Dateien werden in einem
-`Repository <https://github.com/ffsh/bind>`__ verwaltet.
+`Repository <https://github.com/ffsh/bind>`_ verwaltet.
 
 Diese sollen automatisch aktualisiert werden.
 
@@ -753,7 +801,7 @@ Als erstes legen wir einen neuen Benutzer an.
 
 ::
 
-    useradd -m -s /bin/bash dnsbind
+    adduser --disabled-login dnsbind
 
 Dann wechseln wir zu diesem Nutzer.
 
@@ -794,8 +842,7 @@ Mesh Announce
 ~~~~~~~~~~~~~
 
 Um als Gateway, Server oder alles was kein Freifunk Router ist auf der
-Karte zu erscheinen kann
-`mesh-announce <https://github.com/ffnord/mesh-announce>`__ installiert
+Karte zu erscheinen kann `Mesh Announce <https://github.com/ffnord/mesh-announce>`_ installiert
 werden.
 
 Dafür müssen folgende Dinge vorhanden sein:
