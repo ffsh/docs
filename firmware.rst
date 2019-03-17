@@ -137,6 +137,10 @@ Changelog
 Dieses Changelog stellt nur die durch uns durchgeführten Änderungen da. Für Änderungen an Gluon (bsp unterstützte Geräte) verweisen wir auf die Dokumentation von Gluon.
 Die Versionierung entspricht der Versionierung von Gluon. Dieses Changelog bezieht sich auf den :code:`stable` Zweig die anderen Zweige können davon abweichen.
 
+2018.2.1 build xxx
+~~~~~~~~~~~~~~~~~~
+
+
 2018.2 build 163
 ~~~~~~~~~~~~~~~~
 - fix: fehlendes Paket für die vpn-Konfiguration

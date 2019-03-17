@@ -22,10 +22,10 @@ installieren wir eine neue Version von go.
 ::
 
 
-   wget https://dl.google.com/go/go1.10.1.linux-amd64.tar.gz
+   wget https://dl.google.com/go/go1.10.8.linux-amd64.tar.gz
    # Bitte sha256 vergleichen
-   tar -C /usr/local -xzf go1.10.1.linux-amd64.tar.gz
-   rm go1.10.1.linux-amd64.tar.gz
+   tar -C /usr/local -xzf go1.10.8.linux-amd64.tar.gz
+   rm go1.10.8.linux-amd64.tar.gz
 
 
 ::
