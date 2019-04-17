@@ -10,6 +10,15 @@ sich auch auf einem vom Gateway getrennten System durchführen.
 
 .. image:: images/meshviewer-concept.png
 
+Vorraussetzungen
+----------------
+
+Für einen Kartenserver brauchen wir einen Server mit einem aktuellen Linux, diese Anleitung geht von Debian 9 aus.
+Die Hardware Anforderung hängen von der Größe und der zu erwartenden Last der Community ab.
+Bei uns läuft die Karte auf einem der Gateways mit 4 VCores und 4GB RAM und es gab keine Probleme.
+
+Eine Anbindung an das entsprechende Freifunk Netzwerk ist natürlich auch notwendig.
+
 yanic
 -----
 
@@ -19,28 +28,39 @@ früher wurde hierfür Alfred benutzt. yanic ist in go geschrieben also
 installieren wir eine neue Version von go.
 `golang <https://golang.org/dl/>`__
 
-::
-
-
-   wget https://dl.google.com/go/go1.10.8.linux-amd64.tar.gz
-   # Bitte sha256 vergleichen
-   tar -C /usr/local -xzf go1.10.8.linux-amd64.tar.gz
-   rm go1.10.8.linux-amd64.tar.gz
-
-
+Als erstes wechseln wir in den `root` user. 
 ::
 
 
    sudo su
 
 
-Als :code:`root` in :code:`~/.bashrc`
+::
+
+
+   wget https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz
+   # Bitte sha256 vergleichen https://golang.org/dl/
+   tar -C /usr/local -xzf go1.12.4.linux-amd64.tar.gz
+   rm go1.10.8.linux-amd64.tar.gz
+
+
+In :code:`~/.bashrc`
 
 ::
 
 
    GOPATH=/opt/go
    PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+Hier musst du dich einmal abmelden und neu anmelden damit die Variablen auch gesetzt werden.
+
+Nach dem Anmelden kann man prüfen ob die Variablen korrekt gesetzt wurden.
+
+::
+  
+
+  echo $GOPATH
+  /opt/go
 
 
 Mit :code:`whereis` go prüfen ob go gefunden wird:
