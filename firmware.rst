@@ -111,6 +111,51 @@ Dort führen wir zum ersten mal das :code:`build.py` Skript aus (Zeile 3).
 
 In Zeile 4 besteht der unterschied dann nur in dem :code:`-c build` (wir wollen nun bauen) und dem :code:`-t "ar71xx-tiny"` (hier wird nur für ein target gebaut).
 
+Mirror
+------
+Die Firmware wird zentral auf einer Storage Box von Hetzner gehostet. Diese Storage Box wird als Netzwerklaufwerk eingebunden.
+
+Als root-User oder mit sudo
+
+::
+
+    nano /etc/fstab
+
+Die Datei um folgenden Eintrag ergänzen:
+
+::
+
+    //u205465.your-storagebox.de/backup /mnt/firmware       cifs    iocharset=utf8,rw,credentials=/etc/firmware-credentials.txt,uid=0,gid=0,file_mode=0644,dir_mode=0744 0       0
+
+Dann erstellen wir die Credentials-Datei.
+::
+
+    nano /etc/firmware-credentials.txt
+
+Inhalt so wie hier Daten gibts beim NOC
+
+:: 
+
+    username=
+    password=
+
+Rechte anpassen, cifs installieren und einbinden
+::
+
+    chmod 600 /etc/firmware-credentials.txt
+    apt install cifs-utils
+    systemctl daemon-reload
+    systemctl restart remote-fs.target
+
+Jetzt hast du ein Netzwerklaufwerk :)
+
+::
+
+    ls /mnt/firmware
+
+Für nginx gibt es eine vorbereitete Konfiguration.
+
+.. literalinclude:: configs/nginx-firmware.conf
 
 jenkins
 -------
