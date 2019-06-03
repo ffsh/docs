@@ -22,6 +22,7 @@ Als erstes fügen wir das Elastic Repository hinzu.
 Für unser Setup benötigen wir außer den Hauptkomponenten noch eine jre, nginx und die apache2-utils.
 
 ::
+
    apt update
    apt install default-jre-headless elasticsearch kibana logstash nginx apache2-utils
 
@@ -41,7 +42,8 @@ logstash
 --------
 Für logstash müssen wir ein paar Konfigurationen mehr anlegen.
 
-:: 
+::
+
    /etc/logstash/conf.d
    
 Als erstes definieren wir den Input der Kette.
@@ -79,7 +81,7 @@ Als erstes definieren wir den Input der Kette.
             match => [ "syslog_timestamp", "MMM d HH:mm:ss", "MMM dd HH:mm:ss" ]
          }
       }
-  }
+   }
 
 ::
 
@@ -104,7 +106,8 @@ Auch hier müssen wir nicht viel machen, wir bearbeiten nur einen Wert in der Ko
 ::
 
    /etc/kibana/kibana.yml
-   
+
+
 :: 
 
    server.host: "localhost"
@@ -114,6 +117,4 @@ nginx
 -----
 
 .. literalinclude:: configs/nginx-kibana.conf
-
-
 
