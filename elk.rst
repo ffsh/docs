@@ -39,6 +39,63 @@ Hier müssen wir nicht viel machen, wir bearbeiten nur einen Wert in der Konfigu
 
 logstash
 --------
+Für logstash müssen wir ein paar Konfigurationen mehr anlegen.
+
+:: 
+   /etc/logstash/conf.d
+   
+Als erstes definieren wir den Input der Kette.
+
+::
+
+    02-filebeat-input.conf
+
+::
+   
+   input {
+       beats {
+           port => 5044
+           ssl => true
+           ssl_certificate => "/etc/letsencrypt/live/mon.freifunk-suedholstein.de/fullchain.pem"
+           ssl_key => "/etc/letsencrypt/live/mon.freifunk-suedholstein.de/privkey.pem"
+       }
+    }
+
+::
+
+   10-syslog-filter.conf
+   
+:: 
+
+   filter {
+      if [type] == "syslog" {
+         grok {
+            match => { "message" => "%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}" }
+            add_field => [ "received_at", "%{@timestamp}" ]
+            add_field => [ "received_from", "%{host}" ]
+         }
+         syslog_pri { }    
+         date {
+            match => [ "syslog_timestamp", "MMM d HH:mm:ss", "MMM dd HH:mm:ss" ]
+         }
+      }
+  }
+
+::
+
+   30-elasticsearch-output.conf
+   
+::
+   
+   output {
+      elasticsearch {
+          hosts => ["localhost:9200"]
+          sniffing => true
+          manage_template => false
+          index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+          document_type => "%{[@metadata][type]}"
+      }   
+   }
 
 kibana
 ------
@@ -56,6 +113,7 @@ Auch hier müssen wir nicht viel machen, wir bearbeiten nur einen Wert in der Ko
 nginx
 -----
 
+.. literalinclude:: configs/nginx-kibana.conf
 
 
 
