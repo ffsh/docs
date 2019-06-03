@@ -5,7 +5,7 @@
 ELK Server
 ==========
 
-ELK ist ein Softwarestack aus Eleasticsearch, Logdash und Kibana. Es eignet sich um logs von verschiedenen Servern oder auch docker Coatainern zentral zu sammeln und zu visualisieren.
+ELK ist ein Softwarestack aus Eleasticsearch, Logdash und Kibana. Es eignet sich um logs von verschiedenen Servern oder auch docker Containern zentral zu sammeln und zu visualisieren.
 
 Elaststic-apt Repository anlegen
 --------------------------------
