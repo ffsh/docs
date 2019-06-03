@@ -15,6 +15,7 @@ Freifunk Südholsteins Dokumentation
    infrastruktur
    gateway
    meshviewer
+   elk
    firmware
 
 
