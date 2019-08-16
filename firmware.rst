@@ -182,21 +182,25 @@ Changelog
 Dieses Changelog stellt nur die durch uns durchgeführten Änderungen da. Für Änderungen an Gluon (bsp unterstützte Geräte) verweisen wir auf die Dokumentation von Gluon.
 Die Versionierung entspricht der Versionierung von Gluon. Dieses Changelog bezieht sich auf den :code:`stable` Zweig die anderen Zweige können davon abweichen.
 
-2018.2.1 build xxx
-~~~~~~~~~~~~~~~~~~
+2018.2.2
+~~~~~~~~
+- /
 
+2018.2.1
+~~~~~~~~
+- ntp server changes
 
-2018.2 build 163
-~~~~~~~~~~~~~~~~
+2018.2
+~~~~~~
 - fix: fehlendes Paket für die vpn-Konfiguration
 
-2018.1.1 build 141
-~~~~~~~~~~~~~~~~~~
+2018.1.1 
+~~~~~~~~
 - release ohne viele Änderungen (bereits in >=134 enthalten)
 - fehlendes Paket für die vpn Konfigruation
 
-2018.1 build 134
-~~~~~~~~~~~~~~~~
+2018.1
+~~~~~~
 - erste gemeinsame version für lauenburg und stormarn
 - einührung der drei domains ffsh, ffod, ffrz
 
@@ -205,7 +209,4 @@ Die Versionierung entspricht der Versionierung von Gluon. Dieses Changelog bezie
     - Freifunk Lauenburg: ffrz
 - bereits mit patches für autoupdater
 - mit Einführung der neuen Karte wurde alfred entfernt (auch in 2017.1.x)
-
-2018.1 build < 131
-~~~~~~~~~~~~~~~~~~
-- Fehler im Autoupdater
+- Fehler im Autoupdater (2018.1 build < 131)
