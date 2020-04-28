@@ -9,7 +9,7 @@ Gateway Konfiguration
 Allgemeine Software Pakete
 --------------------------
 
-Diese Anleitung ist auf Debian 9 ausgerichtet
+Diese Anleitung ist auf Debian 10 ausgerichtet
 
 ::
 
@@ -48,9 +48,9 @@ alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
 ::
 
     cd /usr/src
-    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.4/batman-adv-2018.4.tar.gz
-    tar xfv batman-adv-2018.4.tar.gz
-    cd batman-adv-2018.4/
+    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batman-adv-2019.5.tar.gz
+    tar xfv batman-adv-2019.5.tar.gz
+    cd batman-adv-2019.5/
     nano dkms.conf
 
 Die :code:`dkms.conf` befüllen:
@@ -58,7 +58,7 @@ Die :code:`dkms.conf` befüllen:
 ::
 
     PACKAGE_NAME=batman-adv
-    PACKAGE_VERSION=2018.4
+    PACKAGE_VERSION=2019.5
 
     DEST_MODULE_LOCATION=/extra
     BUILT_MODULE_NAME=batman-adv
@@ -73,15 +73,15 @@ danach
 
 ::
 
-    dkms add -m batman-adv -v 2018.4
-    dkms build -m batman-adv -v 2018.4
-    dkms install -m batman-adv -v 2018.4
+    dkms add -m batman-adv -v 2019.5
+    dkms build -m batman-adv -v 2019.5
+    dkms install -m batman-adv -v 2019.5
 
 ::
 
-   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2018.4/batctl-2018.4.tar.gz
-   tar xvf batctl-2018.4.tar.gz
-   cd batctl-2018.4/
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batctl-2019.5.tar.gz
+   tar xvf batctl-2019.5.tar.gz
+   cd batctl-2019.5/
    make
    make install
 
@@ -390,6 +390,8 @@ die alle Routing iptables Vorgaben enthält:
    /sbin/iptables -t mangle -I PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
    /sbin/iptables -t mangle -D OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
    /sbin/iptables -t mangle -I OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
+   # IGMP/MLD segmentation
+   echo 2 > /sys/class/net/bat0/brport/multicast_router
 
 
 Jetzt müssen die für Linux ausführbar werden. Dazu dies als root auf der
