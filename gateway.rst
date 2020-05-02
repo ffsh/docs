@@ -507,127 +507,6 @@ Jetzt müssen die für Linux ausführbar werden.
    sudo iptables-restore < /etc/iptables.up.rules
 
 
-VPN (Mullvad)
--------------
-
-Achtung: Kopiere bitte nicht die Konfigurationsdateien von einem Gateway
-auf andere Gateways!
-
-Für das VPN werden diese Dateien benötigt, die alle nach :code:`/etc/openvpn/`
-müssen:
-
-::
-
-   ca.crt
-   crl.pem
-   mullvad.crt
-   mullvad.key
-   mullvad_linux.conf
-
-
-Die Datei :code:`mullvad\_linux.conf` muss noch um folgende Zeilen am Ende
-ergänzt werden:
-
-::
-
-
-   #custom
-   route-noexec
-   up /etc/openvpn/mullvad_up.sh
-   up /etc/fastd/ffsh/iptables_ffsh.sh
-
-
-Mullvad hat an seinen Konfigurationen seit mehreren Sicherheitslücken
-bei OpenVPN und Snowden/NSA geändert. Es kann sein, dass ein Fehler zur
-Cipher-Liste angezeigt wird. Dann muss in der :code:`mullvad\_linux.conf` die
-Zeile zur TLS-Verschlüsselung beginnend tls-cipher auskommentiert
-werden. Wenn kein IPv6 am Server ins Internet möglich ist, kann auch
-tun-ipv6 auskommentiert werden.
-
-Die Datei :code:`/etc/openvpn/mullvad\_up.sh` gibt es noch nicht.Also bitte die
-Datei mit folgenden Zeilen anlegen:
-
-::
-
-   #!/bin/sh
-   ip route replace 0.0.0.0/1 via $5 table 42
-   ip route replace 128.0.0.0/1 via $5 table 42
-
-   service dnsmaq restart
-   exit 0
-
-
-Diese Datei muss nun auch als :code:`root` ausführbar gemacht werden:
-
-::
-
-    chmod +x /etc/openvpn/mullvad\_up.sh
-
-Damit Linux auch diese VPN-Schnittstelle kennt, muss tun in der Datei
-:code:`/etc/modules` bekannt gemacht werden. OpenVPN benötigt ein tun-Interface.
-Trage einfach in eine eigene neue Zeile dies ein
-
-::
-
-   tun
-
-
-Bitte nun als :code:`root` über die Konsole tun aktivieren und den VPN starten
-mit:
-
-::
-
-   modprobe tun
-   service openvpn start
-
-
-VPN-Connect regelmäßig überprüfen
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Es ist sinnvoll regelmäßig zu prüfen, ob die VPN Verbindung noch aktiv
-ist. Dazu wird ein Script auf dem Server abgelegt, dass dann über den
-CRON immer neu den VPN-Connect prüft.
-
-:code:`/ffsh/check-vpn.sh`
-
-::
-
-   #!/bin/bash
-
-   # Test gateway is connected to VPN
-   test=$(ping -q -I tun0 8.8.8.8 -c 4 -i 1 -W 5 | grep 100 )
-
-   if [ "$test" != "" ]
-       then
-       echo "VPN nicht da - Neustart!"
-       service openvpn restart      # Fehler - VPN nicht da - Neustart
-   else
-       echo "alles gut"
-   fi
-
-
-Dann noch das Script ausführbar machen:
-
-::
-
-   chmod ug+x /ffsh/check-vpn.sh
-
-
-Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
-und damit regelmäßig der VPN-Status geprüft wird.
-
-::
-
-   # Check VPN via openvpn is running, if not service restart
-   */10 * * * * root /ffsh/check-vpn.sh > /dev/null
-
-Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
-
-::
-
-   service cron restart
-
-
 DHCP
 ----
 
@@ -1038,3 +917,225 @@ Dann den Service aktivieren
 
 
 Das System sollte in kürze auf der Karte auftauchen.
+
+Munin
+=====
+
+Damit das Gateway auch in den Statistiken unter http://stats.freifunk-suedholstein.de/ auftauch den Munin Node installieren
+
+::
+
+   sudo apt install munin-node
+
+und die :code: `/etc/munin/munin-node.conf` anpassen.
+
+
+::
+
+   cat << EOF > `/etc/munin/munin-node.conf
+   #
+   # Example config-file for munin-node
+   #
+   
+   log_level 4
+   log_file /var/log/munin/munin-node.log
+   pid_file /var/run/munin/munin-node.pid
+   
+   background 1
+   setsid 1
+   
+   user root
+   group root
+   
+   # This is the timeout for the whole transaction.
+   # Units are in sec. Default is 15 min
+   #
+   # global_timeout 900
+   
+   # This is the timeout for each plugin.
+   # Units are in sec. Default is 1 min
+   #
+   # timeout 60
+   
+   # Regexps for files to ignore
+   ignore_file [\#~]$
+   ignore_file DEADJOE$
+   ignore_file \.bak$
+   ignore_file %$
+   ignore_file \.dpkg-(tmp|new|old|dist)$
+   ignore_file \.rpm(save|new)$
+   ignore_file \.pod$
+   
+   # Set this if the client doesn't report the correct hostname when
+   # telnetting to localhost, port 4949
+   #
+   #host_name localhost.localdomain
+   
+   # A list of addresses that are allowed to connect.  This must be a
+   # regular expression, since Net::Server does not understand CIDR-style
+   # network notation unless the perl module Net::CIDR is installed.  You
+   # may repeat the allow line as many times as you'd like
+   
+   allow ^127\.0\.0\.1$
+   allow ^::1$
+   allow ^176\.9\.83\.60$
+   allow ^159\.69\.191\.196$
+   allow ^2a01:4f8:1c17:44d1::1$
+   
+   
+   # If you have installed the Net::CIDR perl module, you can use one or more
+   # cidr_allow and cidr_deny address/mask patterns.  A connecting client must
+   # match any cidr_allow, and not match any cidr_deny.  Note that a netmask
+   # *must* be provided, even if it's /32
+   #
+   # Example:
+   #
+   # cidr_allow 127.0.0.1/32
+   # cidr_allow 192.0.2.0/24
+   # cidr_deny  192.0.2.42/32
+   
+   # Which address to bind to;
+   # host *
+   # host 127.0.0.1
+   host 5.181.50.231
+   host 2a03:4000:3f:4db:7824:4eff:fe98:638
+   
+   # And which port
+   port 4949
+   EOF
+
+Node restarten
+
+::
+
+   systemctl restart munin-node
+
+
+Extras
+======
+
+
+VPN (Mullvad)
+-------------
+
+Wenn der Übergang in das Internet nicht auf diesem Knoten liegen soll kann man ein VPN nutzen. Im Folgenden ist die Konfiguration beschrieben. Die meisten Gateways nutzen das derzeit nicht.
+
+
+Achtung: Kopiere bitte nicht die Konfigurationsdateien von einem Gateway
+auf andere Gateways!
+
+Für das VPN werden diese Dateien benötigt, die alle nach :code:`/etc/openvpn/`
+müssen:
+
+::
+
+   ca.crt
+   crl.pem
+   mullvad.crt
+   mullvad.key
+   mullvad_linux.conf
+
+
+Die Datei :code:`mullvad\_linux.conf` muss noch um folgende Zeilen am Ende
+ergänzt werden:
+
+::
+
+
+   #custom
+   route-noexec
+   up /etc/openvpn/mullvad_up.sh
+   up /etc/fastd/ffsh/iptables_ffsh.sh
+
+
+Mullvad hat an seinen Konfigurationen seit mehreren Sicherheitslücken
+bei OpenVPN und Snowden/NSA geändert. Es kann sein, dass ein Fehler zur
+Cipher-Liste angezeigt wird. Dann muss in der :code:`mullvad\_linux.conf` die
+Zeile zur TLS-Verschlüsselung beginnend tls-cipher auskommentiert
+werden. Wenn kein IPv6 am Server ins Internet möglich ist, kann auch
+tun-ipv6 auskommentiert werden.
+
+Die Datei :code:`/etc/openvpn/mullvad\_up.sh` gibt es noch nicht.Also bitte die
+Datei mit folgenden Zeilen anlegen:
+
+::
+
+   #!/bin/sh
+   ip route replace 0.0.0.0/1 via $5 table 42
+   ip route replace 128.0.0.0/1 via $5 table 42
+
+   service dnsmaq restart
+   exit 0
+
+
+Diese Datei muss nun auch als :code:`root` ausführbar gemacht werden:
+
+::
+
+    chmod +x /etc/openvpn/mullvad\_up.sh
+
+Damit Linux auch diese VPN-Schnittstelle kennt, muss tun in der Datei
+:code:`/etc/modules` bekannt gemacht werden. OpenVPN benötigt ein tun-Interface.
+Trage einfach in eine eigene neue Zeile dies ein
+
+::
+
+   tun
+
+
+Bitte nun als :code:`root` über die Konsole tun aktivieren und den VPN starten
+mit:
+
+::
+
+   modprobe tun
+   service openvpn start
+
+
+VPN-Connect regelmäßig überprüfen
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Es ist sinnvoll regelmäßig zu prüfen, ob die VPN Verbindung noch aktiv
+ist. Dazu wird ein Script auf dem Server abgelegt, dass dann über den
+CRON immer neu den VPN-Connect prüft.
+
+:code:`/ffsh/check-vpn.sh`
+
+::
+
+   #!/bin/bash
+
+   # Test gateway is connected to VPN
+   test=$(ping -q -I tun0 8.8.8.8 -c 4 -i 1 -W 5 | grep 100 )
+
+   if [ "$test" != "" ]
+       then
+       echo "VPN nicht da - Neustart!"
+       service openvpn restart      # Fehler - VPN nicht da - Neustart
+   else
+       echo "alles gut"
+   fi
+
+
+Dann noch das Script ausführbar machen:
+
+::
+
+   chmod ug+x /ffsh/check-vpn.sh
+
+
+Danach in die Datei :code:`/etc/crontab` das Skript alle 10 Minute auszuführen
+und damit regelmäßig der VPN-Status geprüft wird.
+
+::
+
+   # Check VPN via openvpn is running, if not service restart
+   */10 * * * * root /ffsh/check-vpn.sh > /dev/null
+
+Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
+
+::
+
+   service cron restart
+
+
