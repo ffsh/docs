@@ -6,95 +6,140 @@ Gateway Konfiguration
 =====================
 
 
-Allgemeine Software Pakete
---------------------------
+Allgemeines
+-----------
 
 Diese Anleitung ist auf Debian 10 ausgerichtet
 
+Es wird neben dem OS nicht viel Plattenplatz auf dem System benötigt. In Vorbereitung zur installation wird in dieser Anleitung von folgendem ausgegangen:
+
+- Einen Hardware-Server oder ein virtualisiertes System auf dem man Kernel-Module kompilieren und laden kann
+- default-Installation von Debian 10
+- Einen User auf der Maschine, der über sudo-Rechte als root verfügt
+
+Alle Befehle werden als der User ausgeführt wenn dies nicht explizit abweichend angegeben ist. In den Beispielen benutzen wir den als Editor :code: `nano`. Es funktioniert natürlich auch jeder andere Texteditor.
+
+Installation der Debain-Pakete
+------------------------------
+
+Zunächst installieren wir mal alle Pakete die generell benötigt werden
+
+- eine Build-Umgebung (build-essentials)
+- Git (git)
+- https-Support für apt (apt-transport-https)
+- Zeitsynchronisation  (ntp)
+- Netzwerk-Tools (bridge-utils, net-tools)
+
 ::
 
-   sudo apt install build-essential git apt-transport-https bridge-utils ntp net-tools
+   sudo apt install build-essential git apt-transport-https ntp bridge-utils ntp net-tools
 
 
-Batman und Fastd
+
+B.A.T.M.A.N und Fastd
 ----------------
 
-Batman Advanced ist das in Südholstein verwendete Routing Verfahren.
-Batman Advanced benötigt ein Kernel Modul und batclt.
+B.A.T.M.A.N Advanced ist das in Südholstein verwendete Routing Verfahren.
+B.A.T.M.A.N Advanced benötigt ein Kernel Modul und batclt.
 
-Batman Kernel Modul und batctl
+Damit B.A.T.M.A.N bei einem Kernel Update nicht verschwindet oder durch die alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
+
+B.A.T.M.A.N Kernel Modul und batctl
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Als root user :code:`sudo su`:
-
-::
-
-    apt install linux-headers-amd64
-
-    apt install libnl-3-dev libnl-genl-3-dev libcap-dev pkg-config dkms
-
-Wenn es bereits ein installiertes batman-adv module gibt (selbst
-installiert), dann vorher entfernen.
+Zur Sicherheit prüfen wir erst mal ob es ein geladenes B.A.T.M.A.N-Modul gibt: 
 
 ::
 
     lsmod | grep batman
-    # wenn vorhanden dann
+
+Sollte das der Fall sein einmel entladen:
+
+::
+
     modprobe -rf batman_adv
 
-Damit Batman bei einem Kernel Update nicht verschwindet oder durch die
-alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
+
+Dann können wir die Pakete installieren die wir für das Bauen des Kernel-Moduls benötigen:
 
 ::
 
-    cd /usr/src
-    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batman-adv-2019.5.tar.gz
-    tar xfv batman-adv-2019.5.tar.gz
-    cd batman-adv-2019.5/
-    nano dkms.conf
+    sudo apt install linux-headers-amd64 libnl-3-dev libnl-genl-3-dev libcap-dev pkg-config dkms
 
-Die :code:`dkms.conf` befüllen:
+Und nun widmen wir uns dem eigentlichen B.A.T.M.A.N - Modul.
+
+Erst mal die notwendigen Sourcen runterladen und entpacken:
 
 ::
 
-    PACKAGE_NAME=batman-adv
-    PACKAGE_VERSION=2019.5
-
-    DEST_MODULE_LOCATION=/extra
-    BUILT_MODULE_NAME=batman-adv
-    BUILT_MODULE_LOCATION=net/batman-adv
-
-    MAKE="'make' CONFIG_BATMAN_ADV_BATMAN_V=n"
-    CLEAN="'make' clean"
-
-    AUTOINSTALL="yes"
-
-danach
-
-::
-
-    dkms add -m batman-adv -v 2019.5
-    dkms build -m batman-adv -v 2019.5
-    dkms install -m batman-adv -v 2019.5
-
-::
+   sudo su -
+   cd /usr/src
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batman-adv-2019.5.tar.gz
+   tar xzfv batman-adv-2019.5.tar.gz
 
    wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batctl-2019.5.tar.gz
-   tar xvf batctl-2019.5.tar.gz
-   cd batctl-2019.5/
+   tar xzvf batctl-2019.5.tar.gz
+
+   exit
+ 
+
+Nun wird das B.A.T.M.A.N Advanced-Modul gebaut. Dafür müssen wir uns erst mal eine :code: `dkms.conf` zusammenbauen
+
+::
+
+   sudo cat << EOF > /usr/src/batman-adv-2019.5/dkms.conf
+   PACKAGE_NAME=batman-adv
+   PACKAGE_VERSION=2019.5
+
+   DEST_MODULE_LOCATION=/extra
+   BUILT_MODULE_NAME=batman-adv
+   BUILT_MODULE_LOCATION=net/batman-adv
+
+   MAKE="'make' CONFIG_BATMAN_ADV_BATMAN_V=n"
+   CLEAN="'make' clean"
+
+   AUTOINSTALL="yes"
+   EOF
+
+Und nun können die Module gebaut und werden:
+
+::
+
+    sudo dkms add -m batman-adv -v 2019.5
+    sudo dkms build -m batman-adv -v 2019.5
+    sudo dkms install -m batman-adv -v 2019.5
+
+
+Und das dazugehoerende Control- und Management-Tool:
+
+::
+
+   cd /usr/src/batctl-2019.5/
    make
-   make install
+   sudo make install
+
+
+Damit B.A.T.M.A.N Advanced bei jedem Neustart auch geladen wird muss er nun noch in /etc/modules hinterlegt werden:
+
+::
+
+   sudo cat << EOF >> /etc/moules
+   batman_adv
+   EOF
 
 
 fastd
 -----
 
-fastd v18 ist in Debian 9 bereits in den Repositories enthalten. Unter
+fastd v18 ist in Debian 9 und 10 bereits in den Repositories enthalten. Unter
 Debian 8 findet man es in den jessie-backports.
 
 ::
 
    sudo apt install fastd
+
+
+
 
 fastd-Konfiguration
 ~~~~~~~~~~~~~~~~~~~
@@ -116,16 +161,26 @@ später zusammenfinden können:
    mkdir /ffsh
 
 
-Es ist eine Konfigurationsdatei für fastd notwendig. In der folgenden
-Konfiguration bitte die :code:`[EXTERNE-IPv4]` durch die echte IP vom Server
-ersetzen. Wenn es auch eine IPv6 gibt, kann die entsprechende Zeile
-aktiviert werden und benötigt die echte IPv6 :code:`[EXTERNE-IPv6]`. Die
-Konfigurationsdatei :code:`/etc/fastd/ffsh/fastd.conf` soll bitte diese Zeilen
-enthalten:
+Ausserdem benötigen wir einen System-User, als der fastd ausgeführt werden kann. Dafür versorgen wir :code: `adduser` mit folgenden Parametern:
+
+--system              Es handelt sich um einen Systemuser
+--no-create-home      Es soll kein Homeverzeichnis angelegt werden
+--disabled-password   Der User hat kein Passwort
+--disabled-login      Anmelden ist nicht möglich
+--home /nonexistent   Das Home-Verzeichnis gibt es wirklich nicht
 
 ::
 
+   sudo adduser --system --no-create-home --disabled-password --disabled-login --home /nonexistent ffsh
 
+Es ist eine Konfigurationsdatei für fastd notwendig. In der folgenden
+Konfiguration bitte die :code:`[EXTERNE-IPv4]` durch die echte IP vom Server
+ersetzen. Wenn es auch eine IPv6 gibt, kann die entsprechende Zeile
+aktiviert werden und benötigt die echte IPv6 :code:`[EXTERNE-IPv6]`.
+
+::
+
+   sudo cat << EOF > /etc/fastd/ffsh/fastd.conf
    # Bind to a fixed address and port, IPv4 and IPv6 at Port 1234
    bind any:10000 interface "eth0";
    # bind [EXTERNE-IPv6]:1234 interface "eth0";
@@ -174,39 +229,78 @@ enthalten:
    on down "
     ifdown bat0
    ";
+   EOF
 
+Und noch die Variablen ersetzen:
+
+::
+
+   sudo nano /etc/fastd/ffsh/fastd.conf
 
 Das Beste ist, wenn man nun die fastd-Konfiguration mal überprüft.
 Vorher muss der Server neugestartet werden, damit die vorher durchgeführten
 Anpassungen auch Wirkung zeigen :-)
 
-Dann als :code:`root` auf der Konsole mit folgender Zeile die fastd
+::
+   
+   sudo reboot
+
+
+Dann auf der Konsole mit folgender Zeile die fastd
 Einstellungen prüfen:
 
 ::
 
-   fastd -c /etc/fastd/ffsh/fastd.conf
+   sudo fastd -c /etc/fastd/ffsh/fastd.conf
 
 
-Wenn das erfolgreich war, kann nun fastd gestartet werden, auch wieder
-als root mit:
+Bei der Installation von :code: `GW_Bille` ist fastd nicht automatisch gestartet. Er muss als Dienst in systemd hinterlegt werden. Mangels Wissen (und es war schon spät) haben wir uns mit einem Workaround beholfen, sobald wir den korrekten Weg gefunden haben werden wir das auch hier korrigieren
 
 ::
 
-   systemctl start fastd
+   sudo nano /etc/default/fastd
 
+Dort gibt es einen Parameter :code: `AUTOSTART="none"`, der muss auskommentiert werden:
+
+::
+
+   # This is the configuration file for /etc/init.d/fastd
+
+   #
+   # This configuration file is DEPRECATED! Please set autostart to "none" in
+   # this file and use the instanced systemd unit fastd@.service
+   #
+
+   #
+   # Start only these VPNs automatically via init script.
+   # Allowed values are "all", "none" or space separated list of
+   # names of the VPNs. If empty, "all" is assumed.
+   #
+   #AUTOSTART="none"
+
+
+
+Wenn das erfolgreich war, kann nun fastd eingeschaltet und gestartet werden:
+
+::
+
+   sudo systemctl enable fastd
+   sudo systemctl start fastd
+
+
+Zusätzliche Sicherheit - derzeit nicht genutzt !
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Wichtig: In der Konfiguration wird jeder Router reingelassen. Das mag
 nicht jeder, aber es vereinfacht die Integration der Router und damit
 auch die Verteilung. Wenn man das nicht möchte, müsste jeder Router
 separat mit seinem öffentlichen Schlüssel unter :code:`.../peers/` hinterlegt
 werden. Auskommentiert ist eine Zeile bei :code:`on verify` die eine Blacklist
-führt. Damit kann man unliebsame Genossen aussperren. Wenn man das haben
-möchte, so ist eine Datei :code:`/etc/fastd/fastd-blacklist.sh` zu erstellen mit
-folgenden Zeilen und dann auch ausführbar zu machen:
+führt. Damit kann man unliebsame Genossen aussperren. 
 
 ::
 
+   sudo cat << EOF > /etc/fastd/fastd-blacklist.sh
    #!/bin/bash
    PEER_KEY=$1
    if /bin/grep -Fq $PEER_KEY /etc/fastd/fastd-blacklist.json; then
@@ -214,6 +308,13 @@ folgenden Zeilen und dann auch ausführbar zu machen:
    else
        exit 0
    fi
+   EOF
+
+Und da es sich um ein Skript handelt müssen wir es auch ausführbar machen:
+
+::
+
+   sudo chmod +x /etc/fastd/fastd-blacklist.sh
 
 
 Wie die weiteren Dateien mit der Blacklist aussehen, findet man unter
@@ -231,11 +332,13 @@ laufen:
 
 ::
 
+   sudo cat << EOF > /etc/sysctl.d/forwarding.conf
    # IPv4 Forwarding
    net.ipv4.ip_forward=1
 
    # IPv6 Forwarding
    net.ipv6.conf.all.forwarding = 1
+   EOF
 
 
 Interfaces Konfigurieren
@@ -253,26 +356,12 @@ ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
 Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
 funktionieren wird!
 
-Bitte die :code:`/etc/network/interfaces` mit Folgenden Zeilen befüllen. Das
-eth0 sollte so belassen werden, wie es bereits eingerichtet war, damit
-die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
+Interfaces werden in :code:`/etc/network/interfaces` definiert. Es gibt aber die Möglichkeit, Konfigurationen aus eigenen Dateien zu sourcen. 
+Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert ist. Die fassen wir nicht an, wir erzeugen eine eigene Datei:
 
 ::
 
-
-   # The loopback network interface
-   auto lo
-   iface lo inet loopback
-
-   # The primary network interface (here it's a local network)
-   allow-hotplug eth0
-   iface eth0 inet static
-       address 192.168.1.100
-       netmask 255.255.255.224
-       network 192.168.1.0
-       gateway 192.168.1.1
-       dns-nameservers 10.144.0.1 85.214.20.141 213.73.91.35
-
+   sudo cat << EOF > /etc/network/interfaces.d/60-ffsh-init.cfg
    # Netwerkbruecke fuer Freifunk
    # - Hier laeuft der Traffic von den einzelnen Routern und dem externen VPN zusammen
    # - Unter der hier konfigurierten IP ist der Server selber im Freifunk Netz erreichbar
@@ -292,8 +381,8 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
        post-up /sbin/ip rule add iif br-ffsh table 42
        pre-down /sbin/ip rule del iif br-ffsh table 42
 
-   # Batman Interface
-   # - Erstellt das virtuelle Inteface fuer das Batman-Modul und bindet dieses an die Netzwerkbruecke
+   # B.A.T.M.A.N Interface
+   # - Erstellt das virtuelle Inteface fuer das B.A.T.M.A.N-Modul und bindet dieses an die Netzwerkbruecke
    # - Die unten angelegte Routing-Tabelle wird spaeter fuer das Routing innerhalb von Freifunk (Router/VPN) verwendet
    #
    # Nachdem das Interface gestartet ist, wird eine IP-Regel angelegt, die besagt, dass alle Pakete, die über das bat0-Interface eingehen,
@@ -304,7 +393,7 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
    allow-hotplug bat0
    iface bat0 inet6 manual
        pre-up batctl if add ffsh-mesh
-       post-up ip link set address 00:5b:27:81:0[GW Netz] dev bat0   # ACHTUNG BEI GW NETZ DEN DOPPELPUNKT NICHT VERGESSEN (80=0:80 128=1:28)
+       post-up ip link set address 00:5b:27:81:0:[GW Netz] dev bat0
        post-up ip link set dev bat0 up
        post-up brctl addif br-ffsh bat0
        post-up batctl it 10000
@@ -314,18 +403,30 @@ die Netzwerkhardware auch weiterhin im Internet erreichbar ist:
 
        pre-down brctl delif br-ffsh bat0 || true
        down ip link set dev bat0 down
+   EOF
 
+Und hinterher nicht vergessen, die Platzhalter zu ersetzen
+
+::
+
+   sudo nano /etc/network/interfaces.d/60-ffsh-init.cfg
 
 
 Die :code:`/etc/hosts` mit Folgenden Zeilen befüllen:
 
 ::
 
+   sudo cat << EOF >> /etc/hosts
 
-   127.0.0.1                  localhost
    [externe IP]               [GW Name].freifunk-suedholstein.de   [GW Name]
    10.144.[GW Netz].1         ffsh
    fddf:0bf7:80::[GW Netz]:1  ffsh
+
+Und hinterher nicht vergessen, die Platzhalter zu ersetzen
+
+::
+
+   sudo nano /etc/hosts
 
 
 IP Tables
@@ -340,25 +441,26 @@ Tabelle 42 geschickt werden.
 
 ::
 
-
-     *filter
-     :INPUT ACCEPT [0:0]
-     :FORWARD ACCEPT [0:0]
-     :OUTPUT ACCEPT [0:0]
-     COMMIT
-     *mangle
-     :PREROUTING ACCEPT [0:0]
-     :INPUT ACCEPT [0:0]
-     :FORWARD ACCEPT [0:0]
-     :OUTPUT ACCEPT [0:0]
-     :POSTROUTING ACCEPT [0:0]
-     COMMIT
-     *nat
-     :PREROUTING ACCEPT [0:0]
-     :INPUT ACCEPT [0:0]
-     :OUTPUT ACCEPT [0:0]
-     :POSTROUTING ACCEPT [0:0]
-     COMMIT
+   sudo cat << EOF > /etc/iptables.up.rules
+   *filter
+   :INPUT ACCEPT [0:0]
+   :FORWARD ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   COMMIT
+   *mangle
+   :PREROUTING ACCEPT [0:0]
+   :INPUT ACCEPT [0:0]
+   :FORWARD ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   :POSTROUTING ACCEPT [0:0]
+   COMMIT
+   *nat
+   :PREROUTING ACCEPT [0:0]
+   :INPUT ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   :POSTROUTING ACCEPT [0:0]
+   COMMIT
+   EOF
 
 
 Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
@@ -366,17 +468,17 @@ Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
 
 ::
 
-
+   sudo cat << EOF > /etc/network/if-pre-up.d/iptables
    #!/bin/sh
    /sbin/iptables-restore < /etc/iptables.up.rules
-
+   EOF
 
 Bitte nun noch eine Datei :code:`/etc/fastd/ffsh/iptables\_ffsh.sh` erstellen,
 die alle Routing iptables Vorgaben enthält:
 
 ::
 
-
+   sudo cat << EOF > /etc/fastd/ffsh/iptables\_ffsh.sh
    #!/bin/sh
    /sbin/ip route add default via [EXTERNE-IPv4] table 42
    /sbin/ip route add 10.144.0.0/16 dev br-ffsh src 10.144.[GW Netz].1 table 42
@@ -392,18 +494,17 @@ die alle Routing iptables Vorgaben enthält:
    /sbin/iptables -t mangle -I OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
    # IGMP/MLD segmentation
    echo 2 > /sys/class/net/bat0/brport/multicast_router
+   EOF
 
 
-Jetzt müssen die für Linux ausführbar werden. Dazu dies als root auf der
-Konsole eingeben:
+Jetzt müssen die für Linux ausführbar werden. 
 
 ::
 
+   sudo chmod +x /etc/network/if-pre-up.d/iptables
+   sudo chmod +x /etc/fastd/ffsh/iptables_ffsh.sh
 
-   chmod +x /etc/network/if-pre-up.d/iptables
-   chmod +x /etc/fastd/ffsh/iptables_ffsh.sh
-
-   iptables-restore < /etc/iptables.up.rules
+   sudo iptables-restore < /etc/iptables.up.rules
 
 
 VPN (Mullvad)
@@ -530,19 +631,21 @@ Die Änderungen übernehmen durch einen Neustart des Cron-Dämonen:
 DHCP
 ----
 
+Jetzt brauchenwir noch den dhcp innerhalb de FFSH-Netzes
+
 ::
 
-   apt install radvd isc-dhcp-server
+   sudo apt install radvd isc-dhcp-server
 
 
 DHCP radvd IPv6
 ~~~~~~~~~~~~~~~
 
-Es wird für IPv6 die Konfigurationsdatei :code:`/etc/radvd.conf` mit folgenden
-Zeilen benötigt:
+Es wird für IPv6 die Konfigurationsdatei :code:`/etc/radvd.conf` 
 
 ::
 
+   sudo cat << EOF > /etc/radvd.conf
    interface br-ffsh {
        AdvSendAdvert on;
        IgnoreIfMissing on;
@@ -559,13 +662,20 @@ Zeilen benötigt:
        RDNSS fddf:0bf7:80::[GW Netz]:1 {
        };
    };
+   EOF
 
-
-Jetzt kann radvd als :code:`root` auf der Konsole gestartet werden:
+Und die Variablen ersetzen
 
 ::
 
-   service radvd restart
+   sudo nano /etc/radvd.conf
+
+
+Jetzt kann radvd gestartet werden:
+
+::
+
+   sudo service radvd restart
 
 
 DHCP isc-dhcp-server IPv4 und IPv6
@@ -576,6 +686,7 @@ Zeilen benötigt:
 
 ::
 
+   sudo cat << EOF > /etc/dhcp/dhcpd.conf
    ddns-update-style none;
    option domain-name ".ffsh";
 
@@ -599,15 +710,30 @@ Zeilen benötigt:
    include "/etc/dhcp/static.conf";
 
 
+Und wieder die Variablen anpassen:
+
+::
+
+   sudo nano /etc/dhcp/dhcpd.conf
+
+
 Bitte eine leere Datei :code:`/etc/dhcp/static.conf` erzeugen.
 
 ::
 
-    useradd -m -s /bin/bash dhcpstatic
+   sudo echo > /etc/dhcp/static.conf
 
-    cd /home/dhcpstatic
+Und den User dhcpstatic anlegen
 
-    su dhcpstatic
+::
+
+    sudo useradd -m -s /bin/bash dhcpstatic
+
+Und als der User die Static aus dem Git laden
+
+::
+
+    sudo su - dhcpstatic
 
     git clone https://github.com/ffsh/dhcp-static.git
 
@@ -615,9 +741,19 @@ Bitte eine leere Datei :code:`/etc/dhcp/static.conf` erzeugen.
 
     exit
 
-    /home/dhcpstatic/dhcp-static/updateStatics.sh
+Und einmal mit dem auch aus dem Git gezogenen Befehl den dhcpd aktualisieren
 
-    */5 * * * * root /home/dhcpstatic/dhcp-static/updateStatics.sh > /dev/null 2>&1
+::
+
+    sudo /home/dhcpstatic/dhcp-static/updateStatics.sh
+
+Und über cron dafür sorgen dass das regelmäßig passiert.
+
+::
+
+   sudo cat << EOF > /etc/cron.d/ffsh_dhcpstatic
+   */5 * * * * root /home/dhcpstatic/dhcp-static/updateStatics.sh > /dev/null 2>&1
+   EOF
 
 Auf dem DHCP-Server muss noch das Bridge-Interface für IPv4 festgelegt
 werden. Bitte die Datei :code:`/etc/default/isc-dhcp-server` mit folgender
@@ -627,22 +763,28 @@ Option ergänzen:
 
    # On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
    # Separate multiple interfaces with spaces, e.g. "eth0 eth1".
-   INTERFACES="br-ffsh"
+   INTERFACESv4="br-ffsh"
+   INTERFACESv6=""
 
 Am Besten wird der DHCP-Server vor dem Start und Betrieb noch mal
-geprüft. Bitte vorher den Server rebooten und dann auf der Konsole als
-root folgende Zeile ausführen:
+geprüft. Bitte vorher den Server rebooten 
+::
+
+   sudo reboot
+
+und dann auf der Konsole folgende Zeile ausführen:
+
 
 ::
 
-   dhcpd -f -d
+   sudo dhcpd -f -d
 
 
 War das erfolgreich, so kann der DHCP-Server als root gestartet werden:
 
 ::
 
-   systemctl restart isc-dhcp-server
+   sudo systemctl restart isc-dhcp-server
 
 
 DNS-Server (BIND)
@@ -660,7 +802,7 @@ Erstmal diese Datei :code:`/etc/bind/named.conf.options`
 
 ::
 
-
+   sudo cat << EOF > /etc/bind/named.conf.options
    options {
        directory "/var/cache/bind";
        // If there is a firewall between you and nameservers you want
@@ -687,13 +829,14 @@ Erstmal diese Datei :code:`/etc/bind/named.conf.options`
        auth-nxdomain no;    # conform to RFC1035
        listen-on-v6 { any; };
    };
+   EOF
 
 
 Dann in der Datei :code:`/etc/bind/named.conf.local` folgendes am Ende ergänzen:
 
 ::
 
-
+   sudo cat << EOF >> /etc/bind/named.conf.local
    // Do any local configuration here
    // Consider adding the 1918 zones here, if they are not used in your organization
 
@@ -728,6 +871,7 @@ Dann in der Datei :code:`/etc/bind/named.conf.local` folgendes am Ende ergänzen
         type master;
         file "/etc/bind/db.de.ffshev";
    };
+   EOF
 
 
 
@@ -740,14 +884,13 @@ Als erstes legen wir einen neuen Benutzer an.
 
 ::
 
-    useradd -m -s /bin/bash dnsbind
+    udo seradd -m -s /bin/bash dnsbind
 
 Dann wechseln wir zu diesem Nutzer.
 
 ::
 
-    su - dnsbind
-    cd /home/dnsbind/
+    sudo su - dnsbind
 
 Und Klonen das Repository
 
@@ -765,16 +908,18 @@ Und legen einige Cron jobs an.
 
 ::
 
-    */15 * * * * root /home/dnsbind/bind/updatestofrei.sh > /dev/null 2>&1
-    */15 * * * * root /home/dnsbind/bind/updatelauen.sh > /dev/null 2>&1
-    */15 * * * * root /home/dnsbind/bind/updateffsh.sh > /dev/null 2>&1
+   sudo cat << EOF > /etc/cron.d/ffsh_dnsbind
+   */15 * * * * root /home/dnsbind/bind/updatestofrei.sh > /dev/null 2>&1
+   */15 * * * * root /home/dnsbind/bind/updatelauen.sh > /dev/null 2>&1
+   */15 * * * * root /home/dnsbind/bind/updateffsh.sh > /dev/null 2>&1
+   EOF
 
 Zum Schluss starten wir bind neu.
 
 ::
 
 
-   systemctl restart bind9
+   sudo systemctl restart bind9
 
 
 Mesh Announce
@@ -785,12 +930,10 @@ Karte zu erscheinen kann
 `mesh-announce <https://github.com/ffnord/mesh-announce>`__ installiert
 werden.
 
-Dafür müssen folgende Dinge vorhanden sein:
+Dafür müssen folgende Dinge vorhanden sein: lsb_release, ethtool, python3 (>= 3.3)
 
 ::
 
-
-   lsb_release, ethtool, python3 (>= 3.3)
    sudo apt install ethtool python3
 
 
@@ -836,21 +979,52 @@ Im folgenden Beispiel ist Hopfenbach das Gateway dort sind die Interfaces so wie
    WantedBy=multi-user.target
 
 
+Einfacherer Ansatz
+------------------
 
-Dann mit :code:`hostname` prüfen ob der erwünschte Gateway-Name eingetragen ist
-ggf. ändern oder:
-
-:code:`nano providers/nodeinfo/hostname.py`
+Wir erzeugen die Datei :code: `/etc/systemd/system/respondd.service`
 
 ::
 
+   sudo echo << EOF > /etc/systemd/system/respondd.service
+   [Unit]
+   Description=Respondd
+   After=network.target
 
-  import providers
-  import socket
-  class Source(providers.DataSource):
-      def call(self):
-          return "GW_Barnitz"
+   [Service]
+   ExecStart=/opt/mesh-announce/respondd.py -d /opt/mesh-announce/providers -i br-ffsh -i ffsh-mesh -b bat0 -m 10.144.[GW Netz].1
+   Restart=always
+   Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+   [Install]
+   WantedBy=multi-user.target
+
+
+Und passen das GW-Netz an:
+
+::
+
+   sudo nano /etc/systemd/system/respondd.service
+
+
+
+Dann mit :code:`hostname` prüfen ob der erwünschte Gateway-Name eingetragen ist. Wenn dem so ist kann der nächste Schritt übersprungen werden. Andernfalls (oder zur Sicherheit) hinterlegen wir es an passender Stelle:
+
+::
+
+   sudo echo << EOF > /opt/mesh-announce/providers/nodeinfo/hostname.py
+   import providers
+   import socket
+   class Source(providers.DataSource):
+       def call(self):
+          return "[GW hostname]"
+   EOF
+
+Und den gewünschten Hostname eintragen
+
+::
+
+   sudo nano /opt/mesh-announce/providers/nodeinfo/hostname.py
 
 
 Dann den Service aktivieren
@@ -858,10 +1032,9 @@ Dann den Service aktivieren
 ::
 
 
-   systemctl daemon-reload
-   systemctl start respondd
-   # autostart on boot
-   systemctl enable respondd
+   sudo systemctl daemon-reload
+   sudo systemctl start respondd
+   sudo systemctl enable respondd
 
 
 Das System sollte in kürze auf der Karte auftauchen.
