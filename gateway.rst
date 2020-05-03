@@ -19,6 +19,61 @@ Es wird neben dem OS nicht viel Plattenplatz auf dem System benötigt. In Vorber
 
 Alle Befehle werden als der User ausgeführt wenn dies nicht explizit abweichend angegeben ist. In den Beispielen benutzen wir den als Editor :code: `nano`. Es funktioniert natürlich auch jeder andere Texteditor.
 
+
+Hinweise zur Nutzung
+--------------------
+
+Diese Dokumentation soll (auch) eine vollständige Anleitung sein um ein Gateway aufzusetzen. Daher
+
+- Ist das gesamte Dokument in der Reihenfolge aufgebaut, in der die einzelnen Elemente benötigt werden
+- Sollten sich alle Befehle ber Copy&Paste aus diesem Dokument auf die Shell übernehmen lassen, wobei natürlich die individuellen Anpassungen noch von Hand vorgenommen werden müssen. Sollte das der Fall sein wird jeweils auf den Aufruf des Editors hingewiesen.
+
+Um den zweiten Schritt zu ermöglichen wurde ein kleiner "Hack" angewant. Da unser Anliegen natürlich immer auch Erkennnisgeinn ist wollen wir das hier näher erläutern. Grundsätzlich haben alle Commandos auf der Bash eine Standard-Eingabe und eine Standard-Ausgabe, die man aber auch manipulieren kann. Wir nutzen das hier mit dem Befehl :code:`cat`. cat macht erst mal nichts anderes als eine Datei zeilenweise zu lesen und auf die Standard-Ausgabe auszugeben. Diese Standard-Ausgabe ist der Bildschirm.
+
+::
+
+   cat README.txt
+
+macht also nicht anderes, als die Datei README.txt auf den Bildschirm auszugeben. Diese Ausgabe kann man über :code: `>` umlenken.
+
+::
+   
+   cat README.txt > WRITEME.txt
+
+Liest den Inhalt aus README.txt und schreibt ihn nach WRITEME.txt. Wichtig ist: Der Behfehl überschreibt das Ziel ohne Rückfrage. Wenn es WRITEME.txt also vorher gegeben haben wollte wäre der Inhalt in dem Beispiel komplett überschrieben. Wenn man was an eine bestehende Datei anhängen will nutzt man :code:`>>`.
+
+::
+
+   cat README.txt >> WRITEME.txt
+
+Hängt also den Inhalt von README.txt an WRITEME.txt an. Achtung! Wir nutzen hier beide Möglichkeiten, das ist also Absicht ob da 1 oder 2 :code:`>` verwendet werden.
+
+Ebenso kann man über :code:`<` auch den Standard-Input verbiegen. Das ist für unseren Anwendungsfall wichtig da wir ja in den meisten Fällen auf dem System gar keine Dateien haben die wir nutzen wollen sondern die ja erst aus dieser Dokumetation erzeugen wollen.
+
+
+::
+
+   cat < README.txt 
+
+Macht im Prinzip das Selbe wie "cat README.txt". Im Beispiel ohne "<" wird der Dateiname als Parameter an des Kommando übergeben. Der Parameter besagt "Lies den Standard-Input aud der Datei mit diesem Namen" in der Variante mit "<" erhält der Befehl keinen Parameter, allerdings verbiegt "<" den Standard-Input von der Tastatur auf die Datei README.txt. Wer das verifizieren möchte kann mal :code:`cat` ohne jeden Parameter ausfähren. Dann wird cat starten und Daten vom Standard-Input (=Tastatur) erwarten und an den Standard-Output (=Bildschirm) weiterreichen. Ctrl-C beendet den Befehl.
+
+
+Dazu nutzen wir eine Konstruktion namens "Heredoc" bzw. "Herestring". Dies erlaubt es uns, über die Shell auch mehrzeiligen Text an ein Programm zu übergeben. Kurz gefasst: Hier wird ein Ende-Zeichen angegeben und aller Text bis zu diesem Ende-Zeicen wird an das Prgramm übergeben. Das sieht dann so aus:
+
+::
+
+    cat << EOF > WRITEME.txt
+    Dies wird die erste Zeile
+    Dies wird die zweite Zeile
+    EOF
+
+Hier wird "cat" auf der Standard-Eingabe der folgende Text übergeben und als Standard-Ausgabe wird die Datei WRITEME.txt angegeben.
+
+Einen ziemlich guten Guide, was man mit Stanard-Eingabe und Standard-Ausgabe auf der Shell anstellen kann findet man z.B. unter http://mywiki.wooledge.org/BashGuide/InputAndOutput
+
+
+Wer sich in der Anleitung nur für den Inhalt der jeweiligen Datei interessiert kann also einfach alles zwischen der "cat-Zeile und dem "EOF" nehmen und z.B. per Copy&Paste in seinen Lieblings-Editor übertragen. 
+
 Installation der Debain-Pakete
 ------------------------------
 
@@ -36,24 +91,207 @@ Zunächst installieren wir mal alle Pakete die generell benötigt werden
 
 
 
-B.A.T.M.A.N und Fastd
-----------------
+Netzwerk Konfiguration
+----------------------
+
+Interfaces Konfigurieren
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Nun kommt das eigentlich wichtigste. Das Netzwerk muss eingerichtet
+werden, so das die einzelnen Schnittstelle bereitstehen und eine Art
+Brücke vom Freifunknetz in das Internet aufbauen.
+
+Hinweis: diese Konfiguration ist allgemeingültig für unser Netz. Daher
+ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
+Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
+funktionieren wird!
+
+Interfaces werden in :code:`/etc/network/interfaces` definiert. Es gibt aber die Möglichkeit, Konfigurationen aus eigenen Dateien zu sourcen. 
+Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert sind. Die fassen wir nicht an, wir erzeugen eine eigene Datei :sode:`/etc/network/interfaces.d/60-ffsh-init.cfg
+`
+
+::
+
+   sudo cat << EOF > /etc/network/interfaces.d/60-ffsh-init.cfg
+   # Netwerkbruecke fuer Freifunk
+   # - Hier laeuft der Traffic von den einzelnen Routern und dem externen VPN zusammen
+   # - Unter der hier konfigurierten IP ist der Server selber im Freifunk Netz erreichbar
+   # - bridge_ports none sorgt dafuer, dass die Bruecke auch ohne Interface erstellt wird
+
+   auto br-ffsh
+   iface br-ffsh inet static
+       address 10.144.[GW Netz].1
+       netmask 255.255.0.0
+       bridge_ports none
+
+   iface br-ffsh inet6 static
+       address fddf:0bf7:80::[GW Netz]:1
+       netmask 64
+
+
+       post-up /sbin/ip rule add iif br-ffsh table 42
+       pre-down /sbin/ip rule del iif br-ffsh table 42
+
+   # B.A.T.M.A.NAdvanced Advanced Interface
+   # - Erstellt das virtuelle Inteface fuer das B.A.T.M.A.N Advanced-Modul und bindet dieses an die Netzwerkbruecke
+   # - Die unten angelegte Routing-Tabelle wird spaeter fuer das Routing innerhalb von Freifunk (Router/VPN) verwendet
+   #
+   # Nachdem das Interface gestartet ist, wird eine IP-Regel angelegt, die besagt, dass alle Pakete, die über das bat0-Interface eingehen,
+   # und mit 0x1 markiert sind, über die Routing-Tabelle 42 geleitet werden.
+   # Dies ist wichtig, damit die Pakete aus dem Mesh wirklich über das VPN raus gehen.
+   #
+
+   allow-hotplug bat0
+   iface bat0 inet6 manual
+       pre-up batctl if add ffsh-mesh
+       post-up ip link set address 00:5b:27:81:0:[GW Netz] dev bat0
+       post-up ip link set dev bat0 up
+       post-up brctl addif br-ffsh bat0
+       post-up batctl it 10000
+       post-up batctl gw server 100mbit/100mbit
+
+       post-up ip rule add from all fwmark 0x1 table 42
+
+       pre-down brctl delif br-ffsh bat0 || true
+       down ip link set dev bat0 down
+   EOF
+
+Und hinterher nicht vergessen, die Platzhalter zu ersetzen
+
+::
+
+   sudo nano /etc/network/interfaces.d/60-ffsh-init.cfg
+
+
+Die :code:`/etc/hosts` mit Folgenden Zeilen ergänzen:
+
+::
+
+   sudo cat << EOF >> /etc/hosts
+
+   [externe IP]               [GW Name].freifunk-suedholstein.de   [GW Name]
+   10.144.[GW Netz].1         ffsh
+   fddf:0bf7:80::[GW Netz]:1  ffsh
+
+Und hinterher nicht vergessen, die Platzhalter zu ersetzen
+
+::
+
+   sudo nano /etc/hosts
+
+
+IP Forwarding
+~~~~~~~~~~~~~
+
+In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf` bitte die
+folgenden Zeilen eintragen, damit das IP-Forwarding für IPv4 und IPv6
+laufen:
+
+::
+
+   sudo cat << EOF > /etc/sysctl.d/forwarding.conf
+   # IPv4 Forwarding
+   net.ipv4.ip_forward=1
+
+   # IPv6 Forwarding
+   net.ipv6.conf.all.forwarding = 1
+   EOF
+
+IP Tables
+~~~~~~~~~
+
+Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
+
+Damit werden alle Pakete, die über die Bridge rein kommen, mit dem
+0x1-Flag markiert, und damit über Routing-Tabelle 42 geschickt. Es gibt
+noch 2 Regeln für DNS, dass auch DNS-Pakete (Port 53 TCP/UDP) über die
+Tabelle 42 geschickt werden.
+
+::
+
+   sudo cat << EOF > /etc/iptables.up.rules
+   *filter
+   :INPUT ACCEPT [0:0]
+   :FORWARD ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   COMMIT
+   *mangle
+   :PREROUTING ACCEPT [0:0]
+   :INPUT ACCEPT [0:0]
+   :FORWARD ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   :POSTROUTING ACCEPT [0:0]
+   COMMIT
+   *nat
+   :PREROUTING ACCEPT [0:0]
+   :INPUT ACCEPT [0:0]
+   :OUTPUT ACCEPT [0:0]
+   :POSTROUTING ACCEPT [0:0]
+   COMMIT
+   EOF
+
+
+Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
+:code:`/etc/network/if-pre-up.d/iptables` mit folgenden Zeilen:
+
+::
+
+   sudo cat << EOF > /etc/network/if-pre-up.d/iptables
+   #!/bin/sh
+   /sbin/iptables-restore < /etc/iptables.up.rules
+   EOF
+
+Bitte nun noch eine Datei :code:`/etc/fastd/ffsh/iptables\_ffsh.sh` erstellen,
+die alle Routing iptables Vorgaben enthält:
+
+::
+
+   sudo cat << EOF > /etc/fastd/ffsh/iptables\_ffsh.sh
+   #!/bin/sh
+   /sbin/ip route add default via [EXTERNE-IPv4] table 42
+   /sbin/ip route add 10.144.0.0/16 dev br-ffsh src 10.144.[GW Netz].1 table 42
+   /sbin/ip route add 0/1 dev tun0 table 42
+   /sbin/ip route add 128/1 dev tun0 table 42
+   /sbin/ip route del default via [EXTERNE-IPv4] table 42
+   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE > /dev/null 2>&1
+   /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
+   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -o tun0 -j MASQUERADE > /dev/null 2>&1
+   /sbin/iptables -t mangle -D PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
+   /sbin/iptables -t mangle -I PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
+   /sbin/iptables -t mangle -D OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
+   /sbin/iptables -t mangle -I OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
+   # IGMP/MLD segmentation
+   echo 2 > /sys/class/net/bat0/brport/multicast_router
+   EOF
+
+
+Jetzt müssen die für Linux ausführbar werden. 
+
+::
+
+   sudo chmod +x /etc/network/if-pre-up.d/iptables
+   sudo chmod +x /etc/fastd/ffsh/iptables_ffsh.sh
+
+   sudo iptables-restore < /etc/iptables.up.rules
+
+B.A.T.M.A.N Advanced und Fastd
+---------------------
 
 B.A.T.M.A.N Advanced ist das in Südholstein verwendete Routing Verfahren.
 B.A.T.M.A.N Advanced benötigt ein Kernel Modul und batclt.
 
-Damit B.A.T.M.A.N bei einem Kernel Update nicht verschwindet oder durch die alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
+Damit B.A.T.M.A.N Advanced bei einem Kernel Update nicht verschwindet oder durch die alte OS-Version ersetzt wird, richten wir das Modul mit :code:`dkms` ein.
 
-B.A.T.M.A.N Kernel Modul und batctl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+B.A.T.M.A.N Advanced Kernel Modul und batctl
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Zur Sicherheit prüfen wir erst mal ob es ein geladenes B.A.T.M.A.N-Modul gibt: 
+Zur Sicherheit prüfen wir erst mal ob es ein geladenes B.A.T.M.A.N Advanced-Modul gibt: 
 
 ::
 
-    lsmod | grep batman
+   lsmod | grep batman
 
-Sollte das der Fall sein einmel entladen:
+Sollte das der Fall sein einmel entladen, wir wollen unser eigened laden:
 
 ::
 
@@ -66,7 +304,7 @@ Dann können wir die Pakete installieren die wir für das Bauen des Kernel-Modul
 
     sudo apt install linux-headers-amd64 libnl-3-dev libnl-genl-3-dev libcap-dev pkg-config dkms
 
-Und nun widmen wir uns dem eigentlichen B.A.T.M.A.N - Modul.
+Und nun widmen wir uns dem eigentlichen B.A.T.M.A.N Advanced - Modul.
 
 Erst mal die notwendigen Sourcen runterladen und entpacken:
 
@@ -152,16 +390,7 @@ Im Folgenden wird der sichere private Schlüssel als [SERVER-SECRET-KEY]
 aufgeführt und müssen durch die erzeugten Schlüssel sinnvoll ersetzt
 werden!
 
-Bitte als root zwei neue Verzeichnisse anlegen. Dort werden die
-Schlüssel für das Freifunknetz hinterlegt, damit Gateway und Router
-später zusammenfinden können:
-
-::
-
-   mkdir /ffsh
-
-
-Ausserdem benötigen wir einen System-User, als der fastd ausgeführt werden kann. Dafür versorgen wir :code: `adduser` mit folgenden Parametern:
+Wir benötigen einen System-User, als der fastd ausgeführt werden kann. Dafür versorgen wir :code: `adduser` mit folgenden Parametern:
 
 --system              Es handelt sich um einen Systemuser
 --no-create-home      Es soll kein Homeverzeichnis angelegt werden
@@ -260,7 +489,7 @@ Bei der Installation von :code: `GW_Bille` ist fastd nicht automatisch gestartet
 
    sudo nano /etc/default/fastd
 
-Dort gibt es einen Parameter :code: `AUTOSTART="none"`, der muss auskommentiert werden:
+Dort gibt es einen Parameter :code: `AUTOSTART="none"`, der muss auskommentiert werden. Damit greift der default :code:`all`:
 
 ::
 
@@ -320,197 +549,13 @@ Und da es sich um ein Skript handelt müssen wir es auch ausführbar machen:
 Wie die weiteren Dateien mit der Blacklist aussehen, findet man unter
 diesem Link `<https://github.com/ffruhr/fastdbl>`
 
-Netzwerk Konfiguration
-----------------------
 
-IP Forwarding
-~~~~~~~~~~~~~
-
-In der Konfigurationsdatei :code:`/etc/sysctl.d/forwarding.conf` bitte die
-folgenden Zeilen eintragen, damit das IP-Forwarding für IPv4 und IPv6
-laufen:
-
-::
-
-   sudo cat << EOF > /etc/sysctl.d/forwarding.conf
-   # IPv4 Forwarding
-   net.ipv4.ip_forward=1
-
-   # IPv6 Forwarding
-   net.ipv6.conf.all.forwarding = 1
-   EOF
-
-
-Interfaces Konfigurieren
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Nun kommt das eigentlich wichtigste. Das Netzwerk muss eingerichtet
-werden, so das die einzelnen Schnittstelle bereitstehen und eine Art
-Brücke vom Freifunknetz in das Internet aufbauen.
-
-Als erstes kommt die Netzwerkbrücke (Schnittstelle zwischen dem "Mesh"
-Netzwerk und dem Internet-Ausgang per VPN:
-
-Hinweis: diese Konfiguration ist allgemeingültig für unser Netz. Daher
-ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
-Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
-funktionieren wird!
-
-Interfaces werden in :code:`/etc/network/interfaces` definiert. Es gibt aber die Möglichkeit, Konfigurationen aus eigenen Dateien zu sourcen. 
-Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert ist. Die fassen wir nicht an, wir erzeugen eine eigene Datei:
-
-::
-
-   sudo cat << EOF > /etc/network/interfaces.d/60-ffsh-init.cfg
-   # Netwerkbruecke fuer Freifunk
-   # - Hier laeuft der Traffic von den einzelnen Routern und dem externen VPN zusammen
-   # - Unter der hier konfigurierten IP ist der Server selber im Freifunk Netz erreichbar
-   # - bridge_ports none sorgt dafuer, dass die Bruecke auch ohne Interface erstellt wird
-
-   auto br-ffsh
-   iface br-ffsh inet static
-       address 10.144.[GW Netz].1
-       netmask 255.255.0.0
-       bridge_ports none
-
-   iface br-ffsh inet6 static
-       address fddf:0bf7:80::[GW Netz]:1
-       netmask 64
-
-
-       post-up /sbin/ip rule add iif br-ffsh table 42
-       pre-down /sbin/ip rule del iif br-ffsh table 42
-
-   # B.A.T.M.A.N Interface
-   # - Erstellt das virtuelle Inteface fuer das B.A.T.M.A.N-Modul und bindet dieses an die Netzwerkbruecke
-   # - Die unten angelegte Routing-Tabelle wird spaeter fuer das Routing innerhalb von Freifunk (Router/VPN) verwendet
-   #
-   # Nachdem das Interface gestartet ist, wird eine IP-Regel angelegt, die besagt, dass alle Pakete, die über das bat0-Interface eingehen,
-   # und mit 0x1 markiert sind, über die Routing-Tabelle 42 geleitet werden.
-   # Dies ist wichtig, damit die Pakete aus dem Mesh wirklich über das VPN raus gehen.
-   #
-
-   allow-hotplug bat0
-   iface bat0 inet6 manual
-       pre-up batctl if add ffsh-mesh
-       post-up ip link set address 00:5b:27:81:0:[GW Netz] dev bat0
-       post-up ip link set dev bat0 up
-       post-up brctl addif br-ffsh bat0
-       post-up batctl it 10000
-       post-up batctl gw server 100mbit/100mbit
-
-       post-up ip rule add from all fwmark 0x1 table 42
-
-       pre-down brctl delif br-ffsh bat0 || true
-       down ip link set dev bat0 down
-   EOF
-
-Und hinterher nicht vergessen, die Platzhalter zu ersetzen
-
-::
-
-   sudo nano /etc/network/interfaces.d/60-ffsh-init.cfg
-
-
-Die :code:`/etc/hosts` mit Folgenden Zeilen befüllen:
-
-::
-
-   sudo cat << EOF >> /etc/hosts
-
-   [externe IP]               [GW Name].freifunk-suedholstein.de   [GW Name]
-   10.144.[GW Netz].1         ffsh
-   fddf:0bf7:80::[GW Netz]:1  ffsh
-
-Und hinterher nicht vergessen, die Platzhalter zu ersetzen
-
-::
-
-   sudo nano /etc/hosts
-
-
-IP Tables
-~~~~~~~~~
-
-Lege die Konfigurationsdatei :code:`/etc/iptables.up.rules` an mit Folgendem:
-
-Damit werden alle Pakete, die über die Bridge rein kommen, mit dem
-0x1-Flag markiert, und damit über Routing-Tabelle 42 geschickt. Es gibt
-noch 2 Regeln für DNS, dass auch DNS-Pakete (Port 53 TCP/UDP) über die
-Tabelle 42 geschickt werden.
-
-::
-
-   sudo cat << EOF > /etc/iptables.up.rules
-   *filter
-   :INPUT ACCEPT [0:0]
-   :FORWARD ACCEPT [0:0]
-   :OUTPUT ACCEPT [0:0]
-   COMMIT
-   *mangle
-   :PREROUTING ACCEPT [0:0]
-   :INPUT ACCEPT [0:0]
-   :FORWARD ACCEPT [0:0]
-   :OUTPUT ACCEPT [0:0]
-   :POSTROUTING ACCEPT [0:0]
-   COMMIT
-   *nat
-   :PREROUTING ACCEPT [0:0]
-   :INPUT ACCEPT [0:0]
-   :OUTPUT ACCEPT [0:0]
-   :POSTROUTING ACCEPT [0:0]
-   COMMIT
-   EOF
-
-
-Nun müssen die IP-Tables geladen werden. Bitte erstellt die Datei
-:code:`/etc/network/if-pre-up.d/iptables` mit folgenden Zeilen:
-
-::
-
-   sudo cat << EOF > /etc/network/if-pre-up.d/iptables
-   #!/bin/sh
-   /sbin/iptables-restore < /etc/iptables.up.rules
-   EOF
-
-Bitte nun noch eine Datei :code:`/etc/fastd/ffsh/iptables\_ffsh.sh` erstellen,
-die alle Routing iptables Vorgaben enthält:
-
-::
-
-   sudo cat << EOF > /etc/fastd/ffsh/iptables\_ffsh.sh
-   #!/bin/sh
-   /sbin/ip route add default via [EXTERNE-IPv4] table 42
-   /sbin/ip route add 10.144.0.0/16 dev br-ffsh src 10.144.[GW Netz].1 table 42
-   /sbin/ip route add 0/1 dev tun0 table 42
-   /sbin/ip route add 128/1 dev tun0 table 42
-   /sbin/ip route del default via [EXTERNE-IPv4] table 42
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE > /dev/null 2>&1
-   /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -o tun0 -j MASQUERADE > /dev/null 2>&1
-   /sbin/iptables -t mangle -D PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
-   /sbin/iptables -t mangle -I PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
-   /sbin/iptables -t mangle -D OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
-   /sbin/iptables -t mangle -I OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
-   # IGMP/MLD segmentation
-   echo 2 > /sys/class/net/bat0/brport/multicast_router
-   EOF
-
-
-Jetzt müssen die für Linux ausführbar werden. 
-
-::
-
-   sudo chmod +x /etc/network/if-pre-up.d/iptables
-   sudo chmod +x /etc/fastd/ffsh/iptables_ffsh.sh
-
-   sudo iptables-restore < /etc/iptables.up.rules
 
 
 DHCP
 ----
 
-Jetzt brauchenwir noch den dhcp innerhalb de FFSH-Netzes
+Jetzt brauchen wir noch den dhcp innerhalb des FFSH-Netzes
 
 ::
 
@@ -763,7 +808,7 @@ Als erstes legen wir einen neuen Benutzer an.
 
 ::
 
-    udo seradd -m -s /bin/bash dnsbind
+    sudo seradd -m -s /bin/bash dnsbind
 
 Dann wechseln wir zu diesem Nutzer.
 
