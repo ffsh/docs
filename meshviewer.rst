@@ -38,10 +38,10 @@ Als erstes wechseln wir in den `root` user.
 ::
 
 
-   wget https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz
+   wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz
    # Bitte sha256 vergleichen https://golang.org/dl/
-   tar -C /usr/local -xzf go1.12.4.linux-amd64.tar.gz
-   rm go1.10.8.linux-amd64.tar.gz
+   tar -C /usr/local -xzf go1.14.4.linux-amd64.tar.gz
+   rm go1.14.2.linux-amd64.tar.gz
 
 
 In :code:`~/.bashrc`
