@@ -17,7 +17,7 @@ Es wird neben dem OS nicht viel Plattenplatz auf dem System benötigt. In Vorber
 - default-Installation von Debian 10
 - Einen User auf der Maschine, der über sudo-Rechte als root verfügt
 
-Alle Befehle werden als der User ausgeführt wenn dies nicht explizit abweichend angegeben ist. In den Beispielen benutzen wir den als Editor :code: `nano`. Es funktioniert natürlich auch jeder andere Texteditor.
+Alle Befehle werden als der User ausgeführt wenn dies nicht explizit abweichend angegeben ist. In den Beispielen benutzen wir den als Editor :code:`nano`. Es funktioniert natürlich auch jeder andere Texteditor.
 
 
 Hinweise zur Nutzung
@@ -34,7 +34,7 @@ Um den zweiten Schritt zu ermöglichen wurde ein kleiner "Hack" angewant. Da uns
 
    cat README.txt
 
-macht also nicht anderes, als die Datei README.txt auf den Bildschirm auszugeben. Diese Ausgabe kann man über :code: `>` umlenken.
+macht also nicht anderes, als die Datei README.txt auf den Bildschirm auszugeben. Diese Ausgabe kann man über :code:`>` umlenken.
 
 ::
    
@@ -107,7 +107,7 @@ Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
 funktionieren wird!
 
 Interfaces werden in :code:`/etc/network/interfaces` definiert. Es gibt aber die Möglichkeit, Konfigurationen aus eigenen Dateien zu sourcen. 
-Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert sind. Die fassen wir nicht an, wir erzeugen eine eigene Datei :sode:`/etc/network/interfaces.d/60-ffsh-init.cfg
+Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert sind. Die fassen wir nicht an, wir erzeugen eine eigene Datei :code:`/etc/network/interfaces.d/60-ffsh-init.cfg
 `
 
 ::
@@ -392,11 +392,11 @@ werden!
 
 Wir benötigen einen System-User, als der fastd ausgeführt werden kann. Dafür versorgen wir :code: `adduser` mit folgenden Parametern:
 
---system              Es handelt sich um einen Systemuser
---no-create-home      Es soll kein Homeverzeichnis angelegt werden
---disabled-password   Der User hat kein Passwort
---disabled-login      Anmelden ist nicht möglich
---home /nonexistent   Das Home-Verzeichnis gibt es wirklich nicht
+- --system              Es handelt sich um einen Systemuser
+- --no-create-home      Es soll kein Homeverzeichnis angelegt werden
+- --disabled-password   Der User hat kein Passwort
+- --disabled-login      Anmelden ist nicht möglich
+- --home /nonexistent   Das Home-Verzeichnis gibt es wirklich nicht
 
 ::
 
@@ -603,7 +603,7 @@ Jetzt kann radvd gestartet werden:
 
 
 DHCP isc-dhcp-server IPv4 und IPv6
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Die Konfigurationsdatei :code:`/etc/dhcp/dhcpd.conf` wird für IPv4 mit folgenden
 Zeilen benötigt:
@@ -800,9 +800,7 @@ Dann in der Datei :code:`/etc/bind/named.conf.local` folgendes am Ende ergänzen
 
 
 Die zugehörigen Zone Dateien werden in einem
-`Repository <https://github.com/ffsh/bind>`__ verwaltet.
-
-Diese sollen automatisch aktualisiert werden.
+`Repository <https://github.com/ffsh/bind>`__ verwaltet. Diese sollen automatisch aktualisiert werden.
 
 Als erstes legen wir einen neuen Benutzer an.
 
@@ -816,7 +814,7 @@ Dann wechseln wir zu diesem Nutzer.
 
     sudo su - dnsbind
 
-Und Klonen das Repository
+Und klonen das Repository
 
 ::
 
@@ -903,10 +901,8 @@ Im folgenden Beispiel ist Hopfenbach das Gateway dort sind die Interfaces so wie
    WantedBy=multi-user.target
 
 
-Einfacherer Ansatz
-------------------
 
-Wir erzeugen die Datei :code: `/etc/systemd/system/respondd.service`
+Wir erzeugen die Datei :code:`/etc/systemd/system/respondd.service`
 
 ::
 
@@ -964,7 +960,7 @@ Dann den Service aktivieren
 Das System sollte in kürze auf der Karte auftauchen.
 
 Munin
-=====
+-----
 
 Damit das Gateway auch in den Statistiken unter http://stats.freifunk-suedholstein.de/ auftauch den Munin Node installieren
 
@@ -1057,11 +1053,11 @@ Node restarten
 
 
 Extras
-======
+------
 
 
 VPN (Mullvad)
--------------
+~~~~~~~~~~~~~
 
 Wenn der Übergang in das Internet nicht auf diesem Knoten liegen soll kann man ein VPN nutzen. Im Folgenden ist die Konfiguration beschrieben. Die meisten Gateways nutzen das derzeit nicht.
 
