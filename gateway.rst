@@ -11,11 +11,11 @@ Allgemeines
 
 Diese Anleitung ist auf Debian 10 ausgerichtet
 
-Es wird neben dem OS nicht viel Plattenplatz auf dem System benötigt. In Vorbereitung zur installation wird in dieser Anleitung von folgendem ausgegangen:
+Es wird neben dem OS nicht viel Plattenplatz auf dem System benötigt. In Vorbereitung zur Installation wird in dieser Anleitung von folgendem ausgegangen:
 
-- Einen Hardware-Server oder ein virtualisiertes System auf dem man Kernel-Module kompilieren und laden kann
+- Einen Hardware-Server oder ein virtualisiertes System auf dem man Kernel-Module kompilieren und laden kann (z.b. kvm)
 - default-Installation von Debian 10
-- Einen User auf der Maschine, der über sudo-Rechte als root verfügt
+- Einen User auf dem Server mit sudo-Rechten
 
 Alle Befehle werden als der User ausgeführt wenn dies nicht explizit abweichend angegeben ist. In den Beispielen benutzen wir den als Editor :code: `nano`. Es funktioniert natürlich auch jeder andere Texteditor.
 
@@ -26,21 +26,21 @@ Hinweise zur Nutzung
 Diese Dokumentation soll (auch) eine vollständige Anleitung sein um ein Gateway aufzusetzen. Daher
 
 - Ist das gesamte Dokument in der Reihenfolge aufgebaut, in der die einzelnen Elemente benötigt werden
-- Sollten sich alle Befehle ber Copy&Paste aus diesem Dokument auf die Shell übernehmen lassen, wobei natürlich die individuellen Anpassungen noch von Hand vorgenommen werden müssen. Sollte das der Fall sein wird jeweils auf den Aufruf des Editors hingewiesen.
+- Es sollten sich alle Befehle per Copy&Paste aus diesem Dokument in die Shell übernehmen lassen, wobei natürlich die individuellen Anpassungen noch von Hand vorgenommen werden müssen. Sollte das der Fall sein wird jeweils auf den Aufruf des Editors hingewiesen.
 
-Um den zweiten Schritt zu ermöglichen wurde ein kleiner "Hack" angewant. Da unser Anliegen natürlich immer auch Erkennnisgeinn ist wollen wir das hier näher erläutern. Grundsätzlich haben alle Commandos auf der Bash eine Standard-Eingabe und eine Standard-Ausgabe, die man aber auch manipulieren kann. Wir nutzen das hier mit dem Befehl :code:`cat`. cat macht erst mal nichts anderes als eine Datei zeilenweise zu lesen und auf die Standard-Ausgabe auszugeben. Diese Standard-Ausgabe ist der Bildschirm.
+Um den zweiten Schritt zu ermöglichen wurde ein kleiner "Hack" angewandt. Da unser Anliegen natürlich immer auch Erkenntnisgewinn ist wollen wir das hier näher erläutern. Grundsätzlich haben alle Kommandos auf der Bash eine Standard-Eingabe und eine Standard-Ausgabe, die man aber auch manipulieren kann. Wir nutzen das hier mit dem Befehl :code:`cat`. cat macht erst mal nichts anderes als eine Datei zeilenweise zu lesen und auf die Standard-Ausgabe auszugeben. Diese Standard-Ausgabe ist der Bildschirm.
 
 ::
 
    cat README.txt
 
-macht also nicht anderes, als die Datei README.txt auf den Bildschirm auszugeben. Diese Ausgabe kann man über :code: `>` umlenken.
+Macht also nicht anderes, als die Datei README.txt auf den Bildschirm auszugeben. Diese Ausgabe kann man über :code: `>` umlenken.
 
 ::
    
    cat README.txt > WRITEME.txt
 
-Liest den Inhalt aus README.txt und schreibt ihn nach WRITEME.txt. Wichtig ist: Der Behfehl überschreibt das Ziel ohne Rückfrage. Wenn es WRITEME.txt also vorher gegeben haben wollte wäre der Inhalt in dem Beispiel komplett überschrieben. Wenn man was an eine bestehende Datei anhängen will nutzt man :code:`>>`.
+Liest den Inhalt aus README.txt und schreibt ihn nach WRITEME.txt. Wichtig ist: Der Befehl überschreibt das Ziel ohne Rückfrage. Wenn es WRITEME.txt also vorher gegeben haben wollte wäre der Inhalt in dem Beispiel komplett überschrieben. Wenn man was an eine bestehende Datei anhängen will nutzt man :code:`>>`.
 
 ::
 
@@ -48,17 +48,17 @@ Liest den Inhalt aus README.txt und schreibt ihn nach WRITEME.txt. Wichtig ist: 
 
 Hängt also den Inhalt von README.txt an WRITEME.txt an. Achtung! Wir nutzen hier beide Möglichkeiten, das ist also Absicht ob da 1 oder 2 :code:`>` verwendet werden.
 
-Ebenso kann man über :code:`<` auch den Standard-Input verbiegen. Das ist für unseren Anwendungsfall wichtig da wir ja in den meisten Fällen auf dem System gar keine Dateien haben die wir nutzen wollen sondern die ja erst aus dieser Dokumetation erzeugen wollen.
+Ebenso kann man über :code:`<` auch den Standard-Input verbiegen. Das ist für unseren Anwendungsfall wichtig da wir ja in den meisten Fällen auf dem System gar keine Dateien haben die wir nutzen wollen sondern die ja erst aus dieser Dokumentation erzeugen wollen.
 
 
 ::
 
    cat < README.txt 
 
-Macht im Prinzip das Selbe wie "cat README.txt". Im Beispiel ohne "<" wird der Dateiname als Parameter an des Kommando übergeben. Der Parameter besagt "Lies den Standard-Input aud der Datei mit diesem Namen" in der Variante mit "<" erhält der Befehl keinen Parameter, allerdings verbiegt "<" den Standard-Input von der Tastatur auf die Datei README.txt. Wer das verifizieren möchte kann mal :code:`cat` ohne jeden Parameter ausfähren. Dann wird cat starten und Daten vom Standard-Input (=Tastatur) erwarten und an den Standard-Output (=Bildschirm) weiterreichen. Ctrl-C beendet den Befehl.
+Macht im Prinzip das Selbe wie "cat README.txt". Im Beispiel ohne "<" wird der Dateiname als Parameter an des Kommando übergeben. Der Parameter besagt "Lies den Standard-Input aus der Datei mit diesem Namen" in der Variante mit "<" erhält der Befehl keinen Parameter, allerdings verbiegt "<" den Standard-Input von der Tastatur auf die Datei README.txt. Wer das verifizieren möchte kann mal :code:`cat` ohne jeden Parameter ausführen. Dann wird cat starten und Daten vom Standard-Input (=Tastatur) erwarten und an den Standard-Output (=Bildschirm) weiterreichen. Ctrl-C beendet den Befehl.
 
 
-Dazu nutzen wir eine Konstruktion namens "Heredoc" bzw. "Herestring". Dies erlaubt es uns, über die Shell auch mehrzeiligen Text an ein Programm zu übergeben. Kurz gefasst: Hier wird ein Ende-Zeichen angegeben und aller Text bis zu diesem Ende-Zeicen wird an das Prgramm übergeben. Das sieht dann so aus:
+Dazu nutzen wir eine Konstruktion namens "Heredoc" bzw. "Herestring". Dies erlaubt es uns, über die Shell auch mehrzeiligen Text an ein Programm zu übergeben. Kurz gefasst: Hier wird ein Ende-Zeichen angegeben und aller Text bis zu diesem Ende-Zeichen wird an das Programm übergeben. Das sieht dann so aus:
 
 ::
 
