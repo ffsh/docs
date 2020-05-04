@@ -102,7 +102,7 @@ werden, so das die einzelnen Schnittstelle bereitstehen und eine Art
 Brücke vom Freifunknetz in das Internet aufbauen.
 
 Hinweis: diese Konfiguration ist allgemeingültig für unser Netz. Daher
-ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Nr]` geschrieben.
+ist das jeweilige Gateway in den IP-Adressen mit :code:`[GW Netz]` geschrieben.
 Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
 funktionieren wird!
 
@@ -808,7 +808,7 @@ Als erstes legen wir einen neuen Benutzer an.
 
 ::
 
-    sudo seradd -m -s /bin/bash dnsbind
+    sudo useradd -m -s /bin/bash dnsbind
 
 Dann wechseln wir zu diesem Nutzer.
 
@@ -961,7 +961,7 @@ Dann den Service aktivieren
    sudo systemctl enable respondd
 
 
-Das System sollte in kürze auf der Karte auftauchen.
+Das System sollte in kürze auf der Karte auftauchen, je nachdem wie der Kartenserver konfiguriert ist.
 
 Munin
 =====
