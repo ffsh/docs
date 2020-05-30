@@ -361,7 +361,7 @@ Damit B.A.T.M.A.N Advanced bei jedem Neustart auch geladen wird muss er nun noch
 
 ::
 
-   sudo cat << EOF >> /etc/moules
+   sudo cat << EOF >> /etc/modules
    batman_adv
    EOF
 
