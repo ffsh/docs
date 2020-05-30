@@ -312,11 +312,11 @@ Erst mal die notwendigen Sourcen runterladen und entpacken:
 
    sudo su -
    cd /usr/src
-   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batman-adv-2019.5.tar.gz
-   tar xzfv batman-adv-2019.5.tar.gz
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2020.1/batman-adv-2020.1.tar.gz
+   tar xzfv batman-adv-2020.1.tar.gz
 
-   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2019.5/batctl-2019.5.tar.gz
-   tar xzvf batctl-2019.5.tar.gz
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2020.1/batctl-2020.1.tar.gz
+   tar xzvf batctl-2020.1.tar.gz
 
    exit
  
@@ -325,9 +325,9 @@ Nun wird das B.A.T.M.A.N Advanced-Modul gebaut. Dafür müssen wir uns erst mal 
 
 ::
 
-   sudo cat << EOF > /usr/src/batman-adv-2019.5/dkms.conf
+   sudo cat << EOF > /usr/src/batman-adv-2020.1/dkms.conf
    PACKAGE_NAME=batman-adv
-   PACKAGE_VERSION=2019.5
+   PACKAGE_VERSION=2020.1
 
    DEST_MODULE_LOCATION=/extra
    BUILT_MODULE_NAME=batman-adv
@@ -343,16 +343,16 @@ Und nun können die Module gebaut und werden:
 
 ::
 
-    sudo dkms add -m batman-adv -v 2019.5
-    sudo dkms build -m batman-adv -v 2019.5
-    sudo dkms install -m batman-adv -v 2019.5
+    sudo dkms add -m batman-adv -v 2020.1
+    sudo dkms build -m batman-adv -v 2020.1
+    sudo dkms install -m batman-adv -v 2020.1
 
 
 Und das dazugehoerende Control- und Management-Tool:
 
 ::
 
-   cd /usr/src/batctl-2019.5/
+   cd /usr/src/batctl-2020.1/
    make
    sudo make install
 
