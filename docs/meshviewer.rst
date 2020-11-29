@@ -28,7 +28,7 @@ früher wurde hierfür Alfred benutzt. yanic ist in go geschrieben also
 installieren wir eine neue Version von go.
 `golang <https://golang.org/dl/>`__
 
-Als erstes wechseln wir in den `root` user. 
+Als erstes wechseln wir in den `root` user.
 ::
 
 
@@ -38,10 +38,10 @@ Als erstes wechseln wir in den `root` user.
 ::
 
 
-   wget https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz
+   wget https://dl.google.com/go/go1.15.5.linux-amd64.tar.gz
    # Bitte sha256 vergleichen https://golang.org/dl/
-   tar -C /usr/local -xzf go1.12.4.linux-amd64.tar.gz
-   rm go1.10.8.linux-amd64.tar.gz
+   tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+   rm go1.15.5.linux-amd64.tar.gz
 
 
 In :code:`~/.bashrc`
@@ -57,7 +57,7 @@ Hier musst du dich einmal abmelden und neu anmelden damit die Variablen auch ges
 Nach dem Anmelden kann man prüfen ob die Variablen korrekt gesetzt wurden.
 
 ::
-  
+
 
   echo $GOPATH
   /opt/go
@@ -104,6 +104,13 @@ influxdb
 --------
 
 Influxdb dient als Datenbank für :code:`yanic`
+
+::
+
+
+   wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+   source /etc/lsb-release
+   echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
 
 ::
 
@@ -156,7 +163,7 @@ Repository installiert.
 ::
 
 
-   deb https://packagecloud.io/grafana/stable/debian/ stretch main
+   deb https://packagecloud.io/grafana/stable/debian/ stable main
    curl https://packagecloud.io/gpg.key | sudo apt-key add -
    sudo apt-get update
    sudo apt-get install grafana
@@ -249,6 +256,16 @@ Voraussetzungen:
 - TLS mit gültigem Zertifikat (Let's Encrypt)
 - ein wenig Speicherplatz
 
-Die für uns angepasste Version ist so konfiguriert das sie sich hinter einem apache-Server befindet und deshalb keine TLS Konfiguration braucht, passe sie für deinen Anwendungsfall an.
 
 .. literalinclude:: configs/nginx-tilecache.conf
+
+Grafna cache mit nginx
+---------------------
+
+Da Grafana ab version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
+Siehe https://github.com/ffrgb/meshviewer/issues/304
+
+Basierend auf den Kommentaren haben wir auch eine Konfiguration zusammengestellt.
+
+
+.. literalinclude:: configs/nginx-grafana.conf
