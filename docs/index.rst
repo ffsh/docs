@@ -14,7 +14,7 @@ Freifunk Südholsteins Dokumentation
    self
    infrastruktur
    gateway
-   meshviewer
+   map
    firmware
 
 
