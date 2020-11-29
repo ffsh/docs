@@ -3,4 +3,4 @@
 # docs
 In diesem Repository findest du die Dokumentation über Freifunk Südholstein.
 
-Du kannst sie auf [freifunk-suedholstein.readthedocs.io](https://freifunk-suedholstein.readthedocs.io/de/latest/) lesen.
+Du kannst sie auf [docs.freifunk-suedholstein.de](docs.freifunk-suedholstein.de) lesen.
