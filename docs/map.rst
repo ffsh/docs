@@ -2,22 +2,19 @@
    :maxdepth: 2
    :caption: Inhalte
 
-meshviewer
+map
 ==========
 
-Die Folgenden Schritte dienen dazu, eine Karte anzuzeigen. Dies lässt
-sich auch auf einem vom Gateway getrennten System durchführen.
+Diese Dokumentation behandelt das Aufsetzen von https://map.freifunk-suedholstein.de
 
 .. image:: images/meshviewer-concept.png
 
 Vorraussetzungen
 ----------------
 
-Für einen Kartenserver brauchen wir einen Server mit einem aktuellen Linux, diese Anleitung geht von Debian 9 aus.
-Die Hardware Anforderung hängen von der Größe und der zu erwartenden Last der Community ab.
-Bei uns läuft die Karte auf einem der Gateways mit 4 VCores und 4GB RAM und es gab keine Probleme.
-
-Eine Anbindung an das entsprechende Freifunk Netzwerk ist natürlich auch notwendig.
+Wie für all unsere Service Server verwenden wir Ubuntu als Basis.
+Als Hardware verwenden für den gesammten Stack eine VM von Hetzner (CPX21) 2vCores 4GB RAM 40GB disk.
+Für unsere Community reicht dieses Setup bisher aus.
 
 yanic
 -----
@@ -28,20 +25,14 @@ früher wurde hierfür Alfred benutzt. yanic ist in go geschrieben also
 installieren wir eine neue Version von go.
 `golang <https://golang.org/dl/>`__
 
-Als erstes wechseln wir in den `root` user. 
-::
-
-
-   sudo su
-
 
 ::
 
 
-   wget https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz
+   wget https://dl.google.com/go/go1.15.5.linux-amd64.tar.gz
    # Bitte sha256 vergleichen https://golang.org/dl/
-   tar -C /usr/local -xzf go1.12.4.linux-amd64.tar.gz
-   rm go1.10.8.linux-amd64.tar.gz
+   tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+   rm go1.15.5.linux-amd64.tar.gz
 
 
 In :code:`~/.bashrc`
@@ -57,7 +48,7 @@ Hier musst du dich einmal abmelden und neu anmelden damit die Variablen auch ges
 Nach dem Anmelden kann man prüfen ob die Variablen korrekt gesetzt wurden.
 
 ::
-  
+
 
   echo $GOPATH
   /opt/go
@@ -90,7 +81,7 @@ stellen hier an das Gateway Hopfenbach:
 ::
 
 
-   yanic query --wait 5 br-ffsh "fddf:0bf7:80::128:1"
+   yanic query --wait 5 br-ffsh "fddf:bf7:80::48:1"
 
 
 Damit yanic auch als Deamon läuft legen wir noch einen Service an.
@@ -104,6 +95,14 @@ influxdb
 --------
 
 Influxdb dient als Datenbank für :code:`yanic`
+
+Achtung hier wird Influxdb 1.x (aktuell 1.8) installiert, die aktuelle version ist 2.0.
+::
+
+
+   wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+   source /etc/lsb-release
+   echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
 
 ::
 
@@ -156,7 +155,7 @@ Repository installiert.
 ::
 
 
-   deb https://packagecloud.io/grafana/stable/debian/ stretch main
+   deb https://packagecloud.io/grafana/stable/debian/ stable main
    curl https://packagecloud.io/gpg.key | sudo apt-key add -
    sudo apt-get update
    sudo apt-get install grafana
@@ -233,7 +232,7 @@ selbst. Im web Verzeichnis :code:`/var/www/`
 Nun muss die Konfiguration in :code:`meshviewer/config.js` eventuell noch
 angepasst werden.
 
-Danach yarn run gulp Nun muss nur noch ein Webserver meshviewer/build
+Danach :code:`yarn run gulp` Nun muss nur noch ein Webserver meshviewer/build
 ausliefern.
 
 
@@ -249,6 +248,16 @@ Voraussetzungen:
 - TLS mit gültigem Zertifikat (Let's Encrypt)
 - ein wenig Speicherplatz
 
-Die für uns angepasste Version ist so konfiguriert das sie sich hinter einem apache-Server befindet und deshalb keine TLS Konfiguration braucht, passe sie für deinen Anwendungsfall an.
 
 .. literalinclude:: configs/nginx-tilecache.conf
+
+Grafna cache mit nginx
+---------------------
+
+Da Grafana ab version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
+Siehe https://github.com/ffrgb/meshviewer/issues/304
+
+Basierend auf den Kommentaren haben wir auch eine Konfiguration zusammengestellt.
+
+
+.. literalinclude:: configs/nginx-grafana.conf
