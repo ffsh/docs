@@ -107,8 +107,7 @@ Diese Nummer muss natürlich durchgängig gleich sein, da sonst nichts
 funktionieren wird!
 
 Interfaces werden in :code:`/etc/network/interfaces` definiert. Es gibt aber die Möglichkeit, Konfigurationen aus eigenen Dateien zu sourcen. 
-Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert sind. Die fassen wir nicht an, wir erzeugen eine eigene Datei :code:`/etc/network/interfaces.d/60-ffsh-init.cfg
-`
+Um hier die Konfigurationen sauber zu halten lassen wir die defaults unangetastet. In :code: `/etc/network/interfaces` sind unter Debian 10 keine Interfaces mehr angegeben, sie werden aus Dateien in /etc/network/interfaces.d/ gelesen. Hier sollte es eine Datei geben, in der z.B. loopback und eth0 definiert sind. Die fassen wir nicht an, wir erzeugen eine eigene Datei :code:`/etc/network/interfaces.d/60-ffsh-init.cfg`
 
 ::
 
