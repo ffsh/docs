@@ -391,11 +391,13 @@ werden!
 
 Wir benötigen einen System-User, als der fastd ausgeführt werden kann. Dafür versorgen wir :code: `adduser` mit folgenden Parametern:
 
-- --system              Es handelt sich um einen Systemuser
-- --no-create-home      Es soll kein Homeverzeichnis angelegt werden
-- --disabled-password   Der User hat kein Passwort
-- --disabled-login      Anmelden ist nicht möglich
-- --home /nonexistent   Das Home-Verzeichnis gibt es wirklich nicht
+===================  =============================================
+--system             Es handelt sich um einen Systemuser
+--no-create-home     Es soll kein Homeverzeichnis angelegt werden
+--disabled-password  Der User hat kein Passwort
+--disabled-login     Anmelden ist nicht möglich
+--home /nonexistent  Das Home-Verzeichnis gibt es wirklich nicht
+===================  =============================================
 
 ::
 
