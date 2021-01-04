@@ -41,7 +41,7 @@ Gateways
 +------------+---------------------+------+--------------+-----------------------------+---------------+-------------------+--------------------------+---------------+----------+--------------------+---------+
 | Trave      | fddf:0bf7:80::208:1 | ULA  | 10.144.208.1 | 10.144.208.2-10.144.223.254 | n/a           | 00:5b:27:80:02:08 | 00:5b:27:81:02:08        | Hetzner (Fsn) | ul       | direkt             | online  |
 +------------+---------------------+------+--------------+-----------------------------+---------------+-------------------+--------------------------+---------------+----------+--------------------+---------+
-| Viehbach   | fddf:0bf7:80::224:1 | ULA  | 10.144.224.1 | 10.144.224.2-10.144.239.254 | n/a           | 00:5b:27:80:02:24 | 00:5b:27:81:02:24        | Hetzner(fsn)  | ks       | Mullvad 1 / direkt | offline |
+| Viehbach   | fddf:0bf7:80::224:1 | ULA  | 10.144.224.1 | 10.144.224.2-10.144.239.254 | n/a           | 00:5b:27:80:02:24 | 00:5b:27:81:02:24        |   |        | |  |
 +------------+---------------------+------+--------------+-----------------------------+---------------+-------------------+--------------------------+---------------+----------+--------------------+---------+
 
 Karte
@@ -62,10 +62,6 @@ Unsere Grafana instanz ist unter https://map.freifunk-suedholstein.de/grafana er
     # nodelist.json
     https://map.freifunk-suedholstein.de/data/nodelist.json
 
-Jenkins
--------
-
-Unsere Firmware wird mit Jenkins gebaut die Jenkins Instanz ist unter https://jenkins.grotax.de erreichbar und wird von `Grotax <https://github.com/Grotax>`__ betrieben. Die Images werden automatisch unter https://firmware.grotax.de veröffentlicht. Eine offizielle Veröffentlichung auf den Firmware-Servern erfolgt erst nach manueller Prüfung und Signatur.
 
 GitHub
 ------
