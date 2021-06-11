@@ -247,18 +247,8 @@ die alle Routing iptables Vorgaben enthält:
 
    sudo cat << EOF > /etc/fastd/ffsh/iptables\_ffsh.sh
    #!/bin/sh
-   /sbin/ip route add default via [EXTERNE-IPv4] table 42
    /sbin/ip route add 10.144.0.0/16 dev br-ffsh src 10.144.[GW Netz].1 table 42
-   /sbin/ip route add 0/1 dev tun0 table 42
-   /sbin/ip route add 128/1 dev tun0 table 42
-   /sbin/ip route del default via [EXTERNE-IPv4] table 42
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE > /dev/null 2>&1
    /sbin/iptables -t nat -I POSTROUTING -s 0/0 -d 0/0 -j MASQUERADE
-   /sbin/iptables -t nat -D POSTROUTING -s 0/0 -d 0/0 -o tun0 -j MASQUERADE > /dev/null 2>&1
-   /sbin/iptables -t mangle -D PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
-   /sbin/iptables -t mangle -I PREROUTING -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
-   /sbin/iptables -t mangle -D OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1 > /dev/null 2>&1
-   /sbin/iptables -t mangle -I OUTPUT -s 10.144.[GW Netz].0/20 -j MARK --set-mark 0x1
    # IGMP/MLD segmentation
    echo 2 > /sys/class/net/bat0/brport/multicast_router
    EOF
@@ -311,11 +301,11 @@ Erst mal die notwendigen Sourcen runterladen und entpacken:
 
    sudo su -
    cd /usr/src
-   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2020.4/batman-adv-2020.4.tar.gz
-   tar xzfv batman-adv-2020.4.tar.gz
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2021.1/batman-adv-2021.1.tar.gz
+   tar xzfv batman-adv-2021.1.tar.gz
 
-   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2020.4/batctl-2020.4.tar.gz
-   tar xzvf batctl-2020.4.tar.gz
+   wget https://downloads.open-mesh.org/batman/releases/batman-adv-2021.1/batctl-2021.1.tar.gz
+   tar xzvf batctl-2021.1.tar.gz
 
    exit
  
@@ -324,9 +314,9 @@ Nun wird das B.A.T.M.A.N Advanced-Modul gebaut. Dafür müssen wir uns erst mal 
 
 ::
 
-   sudo cat << EOF > /usr/src/batman-adv-2020.4/dkms.conf
+   sudo cat << EOF > /usr/src/batman-adv-2021.1/dkms.conf
    PACKAGE_NAME=batman-adv
-   PACKAGE_VERSION=2020.4
+   PACKAGE_VERSION=2021.1
 
    DEST_MODULE_LOCATION=/extra
    BUILT_MODULE_NAME=batman-adv
@@ -342,16 +332,16 @@ Und nun können die Module gebaut und werden:
 
 ::
 
-    sudo dkms add -m batman-adv -v 2020.4
-    sudo dkms build -m batman-adv -v 2020.4
-    sudo dkms install -m batman-adv -v 2020.4
+    sudo dkms add -m batman-adv -v 2021.1
+    sudo dkms build -m batman-adv -v 2021.1
+    sudo dkms install -m batman-adv -v 2021.1
 
 
 Und das dazugehoerende Control- und Management-Tool:
 
 ::
 
-   cd /usr/src/batctl-2020.4/
+   cd /usr/src/batctl-2021.1/
    make
    sudo make install
 
