@@ -29,10 +29,10 @@ installieren wir eine neue Version von go.
 ::
 
 
-   wget https://dl.google.com/go/go1.15.5.linux-amd64.tar.gz
+   wget https://dl.google.com/go/go1.17.5.linux-amd64.tar.gz
    # Bitte sha256 vergleichen https://golang.org/dl/
-   tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-   rm go1.15.5.linux-amd64.tar.gz
+   tar -C /usr/local -xzf go1.17.5.linux-amd64.tar.gz
+   rm go1.17.5.linux-amd64.tar.gz
 
 
 In :code:`~/.bashrc`
@@ -96,7 +96,7 @@ influxdb
 
 Influxdb dient als Datenbank für :code:`yanic`
 
-Achtung hier wird Influxdb 1.x (aktuell 1.8) installiert, die aktuelle version ist 2.0.
+Achtung hier wird Influxdb 1.x (aktuell 1.8.10) installiert, die aktuelle version ist 2.0 (diese wird aktuell nicht von yanic unterstützt).
 ::
 
 
@@ -192,12 +192,12 @@ nodejs
 
 Wir brauchen ein aktuelles nodejs das finden wir auf
 `nodejs.org <https://nodejs.org/en/download/package-manager/>`__ Wir
-benutzen die LTS Variante 8.x
+benutzen die LTS Variante 16.x
 
 ::
 
 
-   curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
    sudo apt-get install -y nodejs
 
 
@@ -205,15 +205,8 @@ yarn
 ~~~~
 
 Dann installieren wir
-`yarn <https://yarnpkg.com/en/docs/install#linux-tab>`__
-
-::
-
-
-   curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-   echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-   apt install yarn
-
+`yarn <https://yarnpkg.com/getting-started/install>`__
+folge einfach den Anweisungen der Dokumentation.
 
 meshviewer-rgb
 ~~~~~~~~~~~~~~
@@ -254,7 +247,7 @@ Voraussetzungen:
 Grafna cache mit nginx
 ---------------------
 
-Da Grafana ab version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
+Da Grafana ab Version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
 Siehe https://github.com/ffrgb/meshviewer/issues/304
 
 Basierend auf den Kommentaren haben wir auch eine Konfiguration zusammengestellt.
