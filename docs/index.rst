@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Freifunk Südholsteins Dokumentation
-================================================
+===================================
 
 .. toctree::
    :maxdepth: 2
