@@ -54,7 +54,7 @@ Experimentell ist bisher der Workflow im :code:`release.yml`, das Ziel ist es na
 Der Workflow soll dann über API ein Firmware Release-Archiv zusammenstellen und als Anhang an den Release beifügen.
 
 Das Bauen der Firmware dauert aktuell etwas mehr als eine Stunde, wenn GitHub durchschnittlich ausgelastet ist. Sollte GitHub sich eines Tages dazu entscheiden, die
-Ressourcen zu verringern gibt es die Möglichkeit einen `self-hosted runner <https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners>`_ z.b.
+Ressourcen zu verringern, gibt es die Möglichkeit einen `self-hosted runner <https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners>`_ z.b.
 in der Hetzner Cloud zu installieren.
 
 Lokal Bauen

@@ -9,6 +9,10 @@ Gateway Konfiguration
 Allgemeines
 -----------
 
+.. warning::
+    Diese Anleitung ist nicht mehr aktuell, Freifunk Südholstein ist 2021 auf Ansible umgestiegen.
+    Daher wird diese Anleitung nicht mehr aktuallisiert und ist daher mit Vorsicht zu lesen.
+
 Diese Anleitung ist auf Debian 10 ausgerichtet
 
 Es wird neben dem OS nicht viel Plattenplatz auf dem System benötigt. In Vorbereitung zur Installation wird in dieser Anleitung von folgendem ausgegangen:
