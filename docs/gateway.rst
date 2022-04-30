@@ -34,7 +34,7 @@ Hier werden neben ein paar Einstellungen vor allem die Rollen definert und in we
 
 hosts.yml
 ^^^^^^^^^
-Hier Werden alle variablen, welche von den Rollen benötigt werden gespeichert. Abgesehen von den Geheimen natürlich.
+Hier werden alle variablen, welche von den Rollen benötigt werden gespeichert. Abgesehen von den Geheimen natürlich.
 
 host_vars/
 ^^^^^^^^^^
@@ -55,3 +55,29 @@ Mehr zu diesem Thema: https://docs.ansible.com/ansible/latest/user_guide/vault.h
 
 Hinweise zur Nutzung
 --------------------
+Ansible ist relativ einfach zu benutzen, in der Readme des Repository findest du die üblichen nützlichen Befehle.
+Standardmäßig wird Ansible eine Änderung auf allen konfigurierten Gateways einspielen.
+Manuelle Änderungen auf einem Gateway sind ok, sie sollten allerdings so schnell wie möglich in der entsprechenden Ansible Rolle festgehalten werden, inkusive testen.
+Es ist ratsam sich beim schreiben von Rollen bei den standard Ansible Rollen zu bedienen, das ist allerdings nicht immer möglich.
+
+Rollen
+------
+Die Rollen enthalten die Scripte welche auf den Gateways ausgeführt werden.
+Sie sollen den Server durch eine bestimmte Konfiguration in ein Gateway verwandeln.
+
+Architektur
+-----------
+Dieser Abschnitt soll die Architektur unserer Gateways beschreiben.
+
+Hardware
+^^^^^^^^
+Für die "Hardware" setzen wir aktuell die kleinsten virutellen Maschinen von Hetzner und Netcup ein und fahren mit diesem System sehr bisher sehr gut.
+Die Knoten verteilen sich mehr oder weniger gleichmäßig über alle Gateways.
+
+VPN
+^^^
+Wir setzen als VPN Lösung zwischen Knoten und Gateway und auch zwischen den Gateways sowie den Servern für die Karte und die Firmware aktuell auf fastd.
+fastd ist nicht die beste VPN Lösung und zeigt auf den üblichen Routern keine besonders gute Performance ist aber relativ einfach in der Handhabung und funktioniert reibungslos mit Batman Advanced.
+
+Als "Exit VPN" setzen wir wireguard ein um uns vor urheberechtlichen Problemen zu schützen.
+Wireguard ist sehr performant und ist für diesen Fall sehr einfach zu konfigurieren.
