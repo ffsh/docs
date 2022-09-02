@@ -3,7 +3,7 @@
    :caption: Inhalte
 
 map
-==========
+===
 
 Diese Dokumentation behandelt das Aufsetzen von https://map.freifunk-suedholstein.de
 
@@ -245,7 +245,7 @@ Voraussetzungen:
 .. literalinclude:: configs/nginx-tilecache.conf
 
 Grafna cache mit nginx
----------------------
+----------------------
 
 Da Grafana ab Version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
 Siehe https://github.com/ffrgb/meshviewer/issues/304
