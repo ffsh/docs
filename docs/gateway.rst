@@ -54,7 +54,7 @@ Für unser Gateway brauchen wir natürlich auch geheime Daten, welche wir nicht 
 Dafür bietet Ansible eine integrierte Funktion, welche eine verschlüsselte Datei mit den gewünschten Daten erstellt.
 Die Readme Datei im Repository erklärt, wie neue Secrets erstellt werden und wie man sie bearbeitet.
 
-Mehr zu diesem Thema: https://docs.ansible.com/ansible/latest/user_guide/vault.html#
+Mehr zu diesem Thema: https://docs.ansible.com/ansible/latest/user_guide/vault.html
 
 
 Hinweise zur Nutzung
