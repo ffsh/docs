@@ -16,6 +16,7 @@ Freifunk Südholsteins Dokumentation
    gateway
    map
    firmware
+   monitoring
 
 
 Indices and tables
