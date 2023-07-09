@@ -40,6 +40,12 @@ Thumbs.db
 # Editor backup files #
 #######################
 *~
+
 # Visual Studio Code #
 ######################
 .vscode
+
+# Python             #
+######################
+.venv
+venv
