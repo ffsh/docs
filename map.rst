@@ -148,18 +148,9 @@ Grafana
 -------
 
 Grafana kann Graphen erstellen welche im meshviewer eingebunden werden
-können. Hier wird
-`Grafana <http://docs.grafana.org/installation/debian/>`__ über eine
-Repository installiert.
+können. 
 
-::
-
-
-   deb https://packagecloud.io/grafana/stable/debian/ stable main
-   curl https://packagecloud.io/gpg.key | sudo apt-key add -
-   sudo apt-get update
-   sudo apt-get install grafana
-
+Folge für die Installation der offiziellen `Grafana Dokumentation <http://docs.grafana.org/installation/debian/>`__.
 
 Da Grafana bei uns hinter einem Proxy laufen soll, setzen wir auch hier alle IPs auf :code:`localhost`.
 Am besten einmal am Ende prüfen ob alles richtig konfiguriert ist mit :code:`netstat -tlpn`.
@@ -184,50 +175,26 @@ Die Organisation kann man als Admin in Grafana anlegen.
 
 meshviewer
 ----------
+Für die Karte muss meshviewer installiert werden `meshviewer <https://github.com/freifunk/meshviewer>`__
 
-Für den Meshviewer installieren wir als erstes nodejs und yarn
+In :code:`/var/www/` ein neues Verzeichnis :code:`map` anlegen.
+In :code:`/var/www/map` ein neues Verzeichnis :code:`meshviewer` an.
 
-nodejs
-~~~~~~
+Unter `Releases <https://github.com/freifunk/meshviewer/releases>`__ meshviewer-build.zip in :code:`meshviewer` herunterladen.
 
-Wir brauchen ein aktuelles nodejs das finden wir auf
-`nodejs.org <https://nodejs.org/en/download/package-manager/>`__ Wir
-benutzen die LTS Variante 16.x
+Zusätzlich muss eine config.json in dem gleichen Verzeichnis abgelegt werden.
 
-::
+.. literalinclude:: configs/meshviewer-config.json
 
+Dann muss nginx konfiguriert werden.
 
-   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-   sudo apt-get install -y nodejs
+.. literalinclude:: configs/nginx-map.conf
 
-
-yarn
-~~~~
-
-Dann installieren wir
-`yarn <https://yarnpkg.com/getting-started/install>`__
-folge einfach den Anweisungen der Dokumentation.
-
-meshviewer-rgb
-~~~~~~~~~~~~~~
-
-Nun installieren wir den `meshviewer <https://doc.meshviewer.org/>`__
-selbst. Im web Verzeichnis :code:`/var/www/`
+Damit die Karte ein Bild der Router anzeigen kann wird innerhalb von :code:`/var/www/map` das Repository device-pictures geklont.
 
 ::
 
-
-   git clone https://github.com/ffsh/meshviewer.git
-   cd meshviewer
-   yarn
-
-
-Nun muss die Konfiguration in :code:`meshviewer/config.js` eventuell noch
-angepasst werden.
-
-Danach :code:`yarn run gulp` Nun muss nur noch ein Webserver meshviewer/build
-ausliefern.
-
+   git clone https://github.com/freifunk/device-pictures.git
 
 Tile-cache mit nginx
 ---------------------
