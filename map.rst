@@ -204,6 +204,7 @@ Wir verwenden dabei das kostenlose und freie Angebot von OpenStreetMap. Damit di
 Für die einfache Umsetzung haben ein paar Freifunker an einer Konfiguration für nginx gearbeitet, welche genau das umsetzt.
 
 Voraussetzungen:
+
 - nginx erreichbar unter der entsprechenden Domain
 - TLS mit gültigem Zertifikat (Let's Encrypt)
 - ein wenig Speicherplatz
@@ -216,6 +217,8 @@ Grafna cache mit nginx
 
 Da Grafana ab Version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
 Siehe https://github.com/ffrgb/meshviewer/issues/304
+
+Da Grafana keinen image renderer mehr enthält muss ein plugin installiert werden: grafana-image-renderer
 
 Basierend auf den Kommentaren haben wir auch eine Konfiguration zusammengestellt.
 

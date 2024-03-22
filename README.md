@@ -17,7 +17,7 @@ Virtuelle umgebung aktivieren.
 
 Pakete installieren.
 
-`pip install sphinx sphinx-rtd-theme`
+`pip install sphinx sphinx-rtd-theme --upgrade`
 
 Baue die html version.
 `make html`
