@@ -88,7 +88,7 @@
     "devicePictures": "https://map.freifunk-suedholstein.de/pictures-svg/{MODEL_NORMALIZED}.svg",
     "devicePicturesSource": "<a href='https://github.com/freifunk/device-pictures'>https://github.com/freifunk/device-pictures</a>",
     "devicePicturesLicense": "CC-BY-NC-SA 4.0",
-    "deprecation_text": "Achtung dieses Gerät verfügt über wenig Speicher, daher wird es langfristig keine Updates mehr erhalten. Tritt gerne über unsere Webseite mit uns in Kontakt um dich auszutauschen: https://freifunk-suedholstein.de",
+    "deprecation_text": "<p>Achtung! Dieses Gerät verfügt über wenig Speicher, daher wird es keine Updates mehr erhalten!</p><p>Tritt gerne über unsere Webseite mit uns in Kontakt um dich auszutauschen: <a href='https://freifunk-suedholstein.de'>https://freifunk-suedholstein.de</a></p>",
     "deprecation_enabled": true
   }
   
