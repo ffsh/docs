@@ -13,7 +13,7 @@ Vorraussetzungen
 ----------------
 
 Wie für all unsere Service Server verwenden wir Ubuntu als Basis.
-Als Hardware verwenden für den gesammten Stack eine VM von Hetzner (CPX21) 2vCores 4GB RAM 40GB disk.
+Als Hardware verwenden für den gesammten Stack eine VM von Hetzner (CX22) 2vCores 4GB RAM 40GB disk.
 Für unsere Community reicht dieses Setup bisher aus.
 
 yanic
@@ -178,7 +178,7 @@ meshviewer
 Für die Karte muss meshviewer installiert werden `meshviewer <https://github.com/freifunk/meshviewer>`__
 
 In :code:`/var/www/` ein neues Verzeichnis :code:`map` anlegen.
-In :code:`/var/www/map` ein neues Verzeichnis :code:`meshviewer` an.
+In :code:`/var/www/map` ein neues Verzeichnis :code:`meshviewer` anlegen.
 
 Unter `Releases <https://github.com/freifunk/meshviewer/releases>`__ meshviewer-build.zip in :code:`meshviewer` herunterladen.
 
@@ -195,6 +195,11 @@ Damit die Karte ein Bild der Router anzeigen kann wird innerhalb von :code:`/var
 ::
 
    git clone https://github.com/freifunk/device-pictures.git
+
+Updaten funktioniert in diesm Fall natürlich manuell.
+
+- Neuen release herunterladen, falls es einen gibt
+- device-pictures, git pull
 
 Tile-cache mit nginx
 ---------------------

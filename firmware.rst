@@ -74,7 +74,26 @@ Allerdings kann es dabei leicht zu Problemen kommen, alternativ liegt im site Re
 Site Repository
 ***************
 
-Das site Repository wird auf `GitHub <https://github.com/ffsh/site>`__ gehostet. Es gibt einen main branch, auf diesem Branch findet die hauptsächliche Entwicklung statt.
-Daneben kann es feature branches geben, die ausgehend vom main branch eine experimentelle oder abweichende Funktionalität mitbringen.
+Das site Repository wird auf `GitHub <https://github.com/ffsh/site>`__ gehostet. 
+Für jede neue major Version von Gluon wird ein neuer branch angelegt, der main branch wird dabei wenig benutzt.
 
 Es gibt kein Changelog im Repository, auf `freifunk-suedholstein.de <https://freifunk-suedholstein.de/tag/firmware/>`_ sind alle Beiträge zur Firmware getagt und man kann einen schnellen Überblick über die Veränderungen bekommen.
+
+Firmware Selector
+*****************
+
+Von Freifunk Darmstadt gibt es einen tollen Firmware-Selector, der die Auswahl der richtigen Firmware erleichtert.
+
+https://github.com/freifunk-darmstadt/gluon-firmware-selector
+
+.. code-block:: bash
+
+   git clone https://github.com/freifunk-darmstadt/gluon-firmware-selector.git firmware-selector
+
+Zur Installation wird dieses Repository geklont und eine :code:`config.js` Datei angelegt.
+
+.. literalinclude:: configs/firmware-selector-config.js
+
+Und natürlich muss auch eine passende Nginx Konfiguration angelegt werden.
+
+.. literalinclude:: configs/nginx-firmware-installer.conf
