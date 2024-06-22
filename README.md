@@ -11,7 +11,7 @@ Python virtual environment erstellen.
 
 `python -m venv .venv`
 
-Virtuelle umgebung aktivieren.
+Virtuelle Umgebung aktivieren.
 
 `. .venv/bin/activate`
 
@@ -19,7 +19,7 @@ Pakete installieren.
 
 `pip install sphinx sphinx-rtd-theme --upgrade`
 
-Baue die html version.
+Baue die HTML Version.
 `make html`
 
-Das resultat ist in `_build` und kann mit deinem Browser angesehen werden, öffne die index.html oder eine der anderen html dateien.
+Das Resultat ist in `_build` und kann mit deinem Browser angesehen werden, öffne die index.html oder eine der anderen HTML Dateien.
