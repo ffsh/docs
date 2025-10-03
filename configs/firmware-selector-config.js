@@ -48,9 +48,12 @@ var config = {
   title: 'Firmware für Freifunk Südholstein',
   // branch descriptions shown during selection
   branch_descriptions: {
-    stable: 'Empfohlen für Nutzer die sich nicht näher mit der Fimrware beschäftigen wollen.',
-    rc: 'Empfohlen für Nutzer, die sich mehr mit der Firmware beschäftigen wollen und Zeit dafür haben.',
-    testing: 'Empfohlen für Nutzer, die sich mehr mit der Firmware beschäftigen wollen und Zeit dafür haben.'
+    // Bleibt super: Klar und für die Mehrheit
+    stable: 'Empfohlen für Nutzer, die sich nicht näher mit der Firmware beschäftigen wollen und maximale Stabilität suchen.',
+    // Guter Kompromiss: Stabil, aber für Tester, die Feedback geben wollen
+    rc: 'Empfohlen für Nutzer, die eine stabile Vorabversion testen und bei Problemen Feedback geben wollen.',
+    // Warnung vor möglichen Fehlern: Nur für aktive Entwickler/Tester
+    testing: 'Enthält die neuesten Änderungen, aber auch mögliche Fehler. Empfohlen nur für aktive Tester, die Zeit für die Problembehebung haben.'
   },
   // recommended branch will be marked during selection
   recommended_branch: 'stable',
