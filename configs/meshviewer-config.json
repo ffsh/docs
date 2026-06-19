@@ -3,6 +3,10 @@
     "siteName": "Freifunk Südholstein",
     "maxAge": 21,
     "nodeZoom": 19,
+    "grafana": {
+      "url": "/_grafana",
+      "orgId": 1
+    },
     "mapLayers": [
       {
         "name": "OpenStreetMap",
@@ -31,44 +35,67 @@
       { "domain": "ffod", "name": "Stormarn" },
       { "domain": "ffsh", "name": "Südholstein" }
     ],
-    "nodeInfos": [
+    "nodeInfos": [],
+    "nodeCharts": [
       {
         "name": "Clientstatistik",
-        "href": "https://grafana.freifunk-suedholstein.de/d/000000001/statistiken?orgId=1&var-nodeid={NODE_ID}",
-        "image": "https://grafana.freifunk-suedholstein.de/render/d-solo/000000001/statistiken?orgId=1&panelId=1&var-nodeid={NODE_ID}&width=650&height=350&from=now-7d&theme=light",
-        "title": "Knoten {NODE_ID} - weiteren Statistiken"
+        "datasourceUid": "000000001",
+        "datasourceType": "influxdb",
+        "query": "SELECT mean(\"clients.total\") AS \"Clients\" FROM \"node\" WHERE (\"nodeid\" =~ /^$node$/) AND $timeFilter GROUP BY time($interval) fill(null)",
+        "from": "now-7d",
+        "to": "now-1m",
+        "maxDataPoints": 300,
+        "series": [
+          { "name": "Clients", "color": "#73BF69" }
+        ]
       },
       {
         "name": "Trafficstatistik",
-        "href": "https://grafana.freifunk-suedholstein.de/d/000000001/statistiken?orgId=1&var-nodeid={NODE_ID}",
-        "image": "https://grafana.freifunk-suedholstein.de/render/d-solo/000000001/statistiken?orgId=1&panelId=2&var-nodeid={NODE_ID}&width=650&height=350&from=now-7d&theme=light",
-        "title": "Knoten {NODE_ID} - weiteren Statistiken"
+        "datasourceUid": "000000001",
+        "datasourceType": "influxdb",
+        "query": "SELECT non_negative_derivative(first(\"traffic.forward.bytes\"), 2m) * 8 / 120 AS \"Traffic IN\", non_negative_derivative(first(\"traffic.tx.bytes\"), 2m) * 8 / 120 AS \"Traffic OUT\", non_negative_derivative(first(\"traffic.forward.bytes\"), 2m) * 8 / 120 AS \"Traffic FORWARD\" FROM \"node\" WHERE (\"nodeid\" =~ /^$node$/) AND $timeFilter GROUP BY time($interval) fill(null)",
+        "format": ".2~s",
+        "unitSuffix": "bit/s",
+        "from": "now-7d",
+        "to": "now-1m",
+        "maxDataPoints": 300,
+        "series": [
+          { "name": "Traffic IN", "color": "#73BF69" },
+          { "name": "Traffic OUT", "color": "#F2495C" },
+          { "name": "Traffic FORWARD", "color": "#5794F2" }
+        ]
       },
       {
         "name": "Airtime 2.4GHz & 5GHz",
-        "href": "https://grafana.freifunk-suedholstein.de/d/000000001/statistiken?orgId=1&var-nodeid={NODE_ID}",
-        "image": "https://grafana.freifunk-suedholstein.de/render/d-solo/000000001/statistiken?orgId=1&panelId=8&var-nodeid={NODE_ID}&width=650&height=350&from=now-7d&theme=light",
-        "title": "Knoten {NODE_ID} - weiteren Statistiken"
+        "datasourceUid": "000000001",
+        "datasourceType": "influxdb",
+        "query": "SELECT last(\"airtime11g.chan_util\") AS \"2.4GHz\", last(\"airtime11a.chan_util\") AS \"5GHz\" FROM \"node\" WHERE (\"nodeid\" =~ /^$node$/) AND $timeFilter GROUP BY time(5m) fill(null)",
+        "format": ".2f",
+        "unitSuffix": "%",
+        "from": "now-7d",
+        "to": "now-1m",
+        "maxDataPoints": 300,
+        "series": [
+          { "name": "2.4GHz", "color": "#FF9830" },
+          { "name": "5GHz", "color": "#56A64B" }
+        ]
       }
     ],
-    "globalInfos": [
+    "globalInfos": [],
+    "globalCharts": [
       {
-        "name": "Statistik",
-        "href": "https://grafana.freifunk-suedholstein.de/d/9mT4Bukmk/globale-statistiken?orgId=1",
-        "image": "https://grafana.freifunk-suedholstein.de/render/d-solo/9mT4Bukmk/globale-statistiken?orgId=1&panelId=2&width=650&height=350&from=now-7d&theme=light",
-        "title": "Knoten und Clients"
-      },
-      {
-        "name": "Firmware Versionen",
-        "href": "https://grafana.freifunk-suedholstein.de/d/9mT4Bukmk/globale-statistiken?orgId=1",
-        "image": "https://grafana.freifunk-suedholstein.de/render/d-solo/9mT4Bukmk/globale-statistike?orgId=1&panelId=4&width=650&height=350&from=now-15m&theme=light",
-        "title": "Firmware Versionen"
-      },
-      {
-        "name": "Geräte Verteilung",
-        "href": "https://grafana.freifunk-suedholstein.de/d/9mT4Bukmk/globale-statistiken?orgId=1",
-        "image": "https://grafana.freifunk-suedholstein.de/render/d-solo/9mT4Bukmk/globale-statistike?orgId=1&panelId=6&width=650&height=350&from=now-15m&theme=light",
-        "title": "Geräte Versionen"
+        "name": "Knoten und Clients",
+        "datasourceUid": "000000001",
+        "datasourceType": "influxdb",
+        "query": "SELECT mean(\"clients.total\") AS \"Clients\", mean(\"nodes\") AS \"Knoten\", mean(\"gateways\") AS \"Gateways\" FROM \"global\" WHERE $timeFilter GROUP BY time($interval) fill(previous)",
+        "from": "now-7d",
+        "to": "now-1m",
+        "maxDataPoints": 300,
+        "series": [
+          { "name": "Clients", "color": "#73BF69" },
+          { "name": "Knoten", "color": "#5794F2" },
+          { "name": "Gateways", "color": "#F2CC0C" }
+        ]
       }
     ],
     "linkList": [
@@ -91,5 +118,4 @@
     "deprecation_text": "<p><b>Achtung!</b> Dieses Gerät verfügt über wenig Speicher. Es ist unsicher, ob es in Zukunft noch weitere Updates erhalten wird, da der Speicher dafür möglicherweise nicht mehr ausreicht.</p><p>Wir empfehlen, sich über mögliche Alternativen zu informieren. Tritt gerne über unsere Webseite mit uns in Kontakt, um dich auszutauschen: <a href='https://freifunk-suedholstein.de'>https://freifunk-suedholstein.de</a></p>",
     "eol_text":"<p><b>WICHTIG! Dieses Gerät hat sein Lebensende (End-of-Life) erreicht und erhält ab sofort keine Updates mehr!</b></p><p>Der weitere Einsatz dieses Gerätes kann zu Sicherheitsproblemen führen. Ein Austausch gegen ein aktuelles Gerät ist dringend und schnellstmöglich zu empfehlen, um weiterhin ein sicheres Freifunk-Netz zu gewährleisten.</p><p>Bitte informiere dich über geeignete Austauschgeräte oder tritt über unsere Webseite mit uns in Kontakt, um dich auszutauschen: <a href='https://freifunk-suedholstein.de'>https://freifunk-suedholstein.de</a></p>",
     "deprecation_enabled": true
-  }
-  
+}

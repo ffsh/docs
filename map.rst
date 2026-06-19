@@ -217,15 +217,11 @@ Voraussetzungen:
 
 .. literalinclude:: configs/nginx-tilecache.conf
 
-Grafna cache mit nginx
-----------------------
+Eingebettete Grafiken im Meshviewer
+-----------------------------------
 
-Da Grafana ab Version 7.0 das rendern der images, welche wir auf der Karte einbetten, anders rendert als früher mussten wir einen Cache einrichten.
-Siehe https://github.com/ffrgb/meshviewer/issues/304
-
-Da Grafana keinen image renderer mehr enthält muss ein plugin installiert werden: grafana-image-renderer
-
-Basierend auf den Kommentaren haben wir auch eine Konfiguration zusammengestellt.
-
+Die neuste version vom Meshviewer unterstützt nun client seitig gerenderte Graphen, dafür wird die Grafana API genutzt.
+Das Image Plugin für Grafana ist damit nicht mehr nötig und hat nie gut funktioniert.
+Wenn man auf der Webseite grafiken einbinden möchte oder an anderen Stellen, braucht man es natürlich trotzdem noch.
 
 .. literalinclude:: configs/nginx-grafana.conf
