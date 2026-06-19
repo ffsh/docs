@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Freifunk Suedholstein'
-copyright = '2023, Grotax, Freifunk Südholstein'
+copyright = '2026, Grotax, Freifunk Südholstein'
 author = 'Grotax, ffsh'
 
 # The version info for the project you're documenting, acts as replacement for
